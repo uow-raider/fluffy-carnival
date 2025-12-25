@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NOVA TOOL</title>
+    <title>NOVA TOOL - Onboarding</title>
     <style>
         :root {
             --bg-color: #0d0d15;
@@ -40,43 +40,41 @@
         .subtitle { font-size: 11px; text-transform: uppercase; opacity: 0.6; }
 
         .section { margin-bottom: 15px; }
-        label { display: block; font-size: 12px; margin-bottom: 5px; color: var(--primary); font-weight: bold; }
+        label { display: block; font-size: 11px; margin-bottom: 5px; color: var(--primary); font-weight: bold; letter-spacing: 1px; }
 
         textarea, input {
             width: 100%; padding: 10px; background: #0a0a1a; border: 1px solid var(--border);
             border-radius: 8px; color: white; box-sizing: border-box; outline: none; font-family: 'Consolas', monospace;
         }
         
-        textarea { height: 100px; resize: none; font-size: 11px; }
-
+        textarea { height: 80px; resize: none; font-size: 10px; }
         .masked { -webkit-text-security: disc !important; }
-        .view-toggle { font-size: 11px; color: var(--primary); cursor: pointer; text-align: right; margin-top: 5px; text-decoration: underline; user-select: none; }
+        .view-toggle { font-size: 10px; color: var(--primary); cursor: pointer; text-align: right; margin-top: 4px; text-decoration: underline; }
 
         .form-row { display: flex; gap: 10px; }
         .form-row div { flex: 1; }
 
-        .controls { display: flex; gap: 10px; margin-top: 20px; }
-        .btn { flex: 1; padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; text-transform: uppercase; transition: 0.3s; }
-        .btn-primary { background: var(--primary); color: #000; }
-        .btn-primary:hover { opacity: 0.8; box-shadow: 0 0 15px var(--primary); }
-        .btn-danger { background: var(--danger); color: white; }
-        .btn-danger:disabled { background: #333; opacity: 0.5; cursor: not-allowed; }
-
-        /* ログエリア */
         .status-board {
-            margin-top: 20px; padding: 15px; background: rgba(0,0,0,0.3);
-            border-radius: 8px; font-family: 'Consolas', monospace; font-size: 12px; border: 1px inset var(--border);
-            height: 150px; overflow-y: auto; line-height: 1.4;
+            margin-top: 15px; padding: 12px; background: rgba(0,0,0,0.5);
+            border-radius: 8px; font-family: 'Consolas', monospace; font-size: 11px; border: 1px solid var(--border);
+            height: 120px; overflow-y: auto; line-height: 1.4;
         }
+        
         .status-summary {
-            margin-top: 10px; display: flex; justify-content: space-between; font-size: 14px;
+            margin-top: 10px; display: flex; justify-content: space-between; font-size: 12px;
             color: var(--primary); font-family: 'Consolas', monospace;
         }
 
-        .log-entry { margin-bottom: 4px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 2px; }
+        .controls { display: flex; gap: 10px; margin-top: 20px; }
+        .btn { flex: 1; padding: 14px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; text-transform: uppercase; transition: 0.3s; }
+        .btn-primary { background: var(--primary); color: #000; box-shadow: 0 0 10px rgba(0, 212, 255, 0.3); }
+        .btn-danger { background: var(--danger); color: white; }
+        .btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+        .log-entry { margin-bottom: 2px; }
         .log-success { color: var(--success); }
         .log-error { color: var(--danger); }
-        .log-info { color: var(--primary); }
+        .log-info { color: #aaa; }
     </style>
 </head>
 <body>
@@ -84,60 +82,55 @@
 <div class="container">
     <header>
         <h1 class="brand-title">NOVA TOOL</h1>
-        <div class="subtitle">Advanced Discord Auto-Onboarding</div>
+        <div class="subtitle">Bypass & Onboarding Automator</div>
     </header>
 
     <div class="section">
-        <label>DISCORD TOKENS (1行に1つ入力)</label>
-        <textarea id="tokens" class="masked" placeholder="token1&#10;token2&#10;token3"></textarea>
+        <label>AUTH TOKENS (One per line)</label>
+        <textarea id="tokens" class="masked" placeholder="token1&#10;token2"></textarea>
         <div class="view-toggle" id="toggleView">MASK ON/OFF</div>
     </div>
 
     <div class="form-row">
         <div class="section">
-            <label>SERVER ID</label>
+            <label>SERVER (GUILD) ID</label>
             <input type="text" id="serverId" placeholder="1234567890">
         </div>
         <div class="section">
-            <label>TARGET MESSAGE ID</label>
-            <input type="text" id="messageId" placeholder="9876543210">
+            <label>CHANNEL ID</label>
+            <input type="text" id="channelId" placeholder="1234567890">
         </div>
     </div>
 
     <div class="section">
-        <label>CHANNEL ID</label>
-        <input type="text" id="channelId" placeholder="555666777">
+        <label>ONBOARDING MESSAGE ID</label>
+        <input type="text" id="messageId" placeholder="1234567890">
     </div>
 
     <div class="status-board" id="logArea">
-        <div class="log-info">> システム待機中...</div>
+        <div class="log-info">> 待機中...</div>
     </div>
     
     <div class="status-summary">
-        <span>PROGRESS: <span id="progressText">0%</span></span>
-        <span>SUCCESS: <span id="successCount">0</span></span>
+        <span>PROG: <span id="progressText">0%</span></span>
+        <span>DONE: <span id="successCount">0</span></span>
     </div>
 
     <div class="controls">
         <button class="btn btn-danger" id="stopBtn" disabled>STOP</button>
-        <button class="btn btn-primary" id="startBtn">EXECUTE</button>
+        <button class="btn btn-primary" id="startBtn">EXECUTE BYPASS</button>
     </div>
 </div>
 
 <script>
     const tokensInput = document.getElementById('tokens');
-    const toggleView = document.getElementById('toggleView');
     const logArea = document.getElementById('logArea');
     const startBtn = document.getElementById('startBtn');
-    const progressText = document.getElementById('progressText');
-    const successCountElem = document.getElementById('successCount');
-
+    const stopBtn = document.getElementById('stopBtn');
+    
     let isRunning = false;
 
-    // トークンの表示切り替え
-    toggleView.onclick = () => {
-        tokensInput.classList.toggle('masked');
-    };
+    document.getElementById('toggleView').onclick = () => tokensInput.classList.toggle('masked');
 
     function addLog(msg, type = 'info') {
         const div = document.createElement('div');
@@ -147,79 +140,99 @@
         logArea.scrollTop = logArea.scrollHeight;
     }
 
-    async function executeAction(token, channelId, messageId, serverId) {
+    // オンボーディング突破用関数
+    async function bypassOnboarding(token, guildId) {
         try {
-            // リアクション送信 (✅)
-            const emoji = encodeURIComponent("✅");
-            const res = await fetch(`https://discord.com/api/v9/channels/${channelId}/messages/${messageId}/reactions/${emoji}/@me`, {
-                method: "PUT",
+            // 1. オンボーディング情報を取得
+            const getRes = await fetch(`https://discord.com/api/v9/guilds/${guildId}/onboarding`, {
                 headers: { "Authorization": token }
             });
+            if (!getRes.ok) return false;
+            const data = await getRes.json();
 
-            if (res.status === 204) {
-                return true;
-            } else {
-                console.error(`Error: ${res.status}`);
-                return false;
-            }
+            // 2. 必須の質問（prompt）があれば回答を生成
+            const responses = data.prompts.map(prompt => {
+                return {
+                    id: prompt.id,
+                    options: [prompt.options[0].id], // 最初の一番上の選択肢を選ぶ
+                    required: prompt.required
+                };
+            });
+
+            // 3. 回答を送信
+            const postRes = await fetch(`https://discord.com/api/v9/guilds/${guildId}/onboarding-responses`, {
+                method: "POST",
+                headers: {
+                    "Authorization": token,
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    onboarding_responses: responses,
+                    onboarding_prompts_seen: data.prompts.map(p => p.id),
+                    onboarding_responses_seen: []
+                })
+            });
+            return postRes.ok;
         } catch (e) {
             return false;
         }
     }
 
-    startBtn.onclick = async () => {
-        const tokens = tokensInput.value.split('\n').map(t => t.trim()).filter(t => t !== "");
-        const sId = document.getElementById('serverId').value.trim();
-        const cId = document.getElementById('channelId').value.trim();
-        const mId = document.getElementById('messageId').value.trim();
+    // リアクション送信
+    async function sendReaction(token, channelId, messageId) {
+        const emoji = encodeURIComponent("✅");
+        const res = await fetch(`https://discord.com/api/v9/channels/${channelId}/messages/${messageId}/reactions/${emoji}/@me`, {
+            method: "PUT",
+            headers: { "Authorization": token }
+        });
+        return res.status === 204;
+    }
 
-        if (tokens.length === 0 || !sId || !cId || !mId) {
-            alert("全てのフィールドを入力してください");
-            return;
-        }
+    startBtn.onclick = async () => {
+        const tokens = tokensInput.value.split('\n').map(t => t.trim()).filter(t => t);
+        const guildId = document.getElementById('serverId').value.trim();
+        const channelId = document.getElementById('channelId').value.trim();
+        const messageId = document.getElementById('messageId').value.trim();
+
+        if (!tokens.length || !guildId) return alert("入力不足です");
 
         isRunning = true;
         startBtn.disabled = true;
-        document.getElementById('stopBtn').disabled = false;
+        stopBtn.disabled = false;
         logArea.innerHTML = "";
-        let successTotal = 0;
-
-        addLog(`${tokens.length}個のトークンで処理を開始します...`, 'info');
+        let count = 0;
 
         for (let i = 0; i < tokens.length; i++) {
             if (!isRunning) break;
-
             const token = tokens[i];
-            const maskedToken = token.substring(0, 10) + "****";
-            addLog(`処理中: ${maskedToken}...`);
+            const mask = token.substring(0, 8) + "...";
+            
+            addLog(`Target: ${mask}`);
 
-            const success = await executeAction(token, cId, mId, sId);
+            // STEP 1: オンボーディング突破
+            const obSuccess = await bypassOnboarding(token, guildId);
+            addLog(obSuccess ? " > Onboarding: PASSED" : " > Onboarding: SKIPPED/FAILED", obSuccess ? "success" : "info");
 
-            if (success) {
-                successTotal++;
-                successCountElem.textContent = successTotal;
-                addLog(`成功: ${maskedToken}`, 'success');
-            } else {
-                addLog(`失敗: ${maskedToken}`, 'error');
+            // STEP 2: リアクション
+            if (channelId && messageId) {
+                const reSuccess = await sendReaction(token, channelId, messageId);
+                addLog(reSuccess ? " > Reaction: OK" : " > Reaction: FAIL", reSuccess ? "success" : "error");
             }
 
-            // 進捗更新
-            progressText.textContent = Math.round(((i + 1) / tokens.length) * 100) + "%";
+            count++;
+            document.getElementById('successCount').textContent = count;
+            document.getElementById('progressText').textContent = Math.round(((i+1)/tokens.length)*100) + "%";
             
-            // API制限(Rate Limit)を考慮した待機 (1秒)
-            await new Promise(r => setTimeout(r, 1000));
+            await new Promise(r => setTimeout(r, 1500)); // Rate limit 考慮
         }
 
-        addLog("全工程が終了しました。", 'info');
+        addLog("=== ALL PROCESS COMPLETED ===", "success");
         isRunning = false;
         startBtn.disabled = false;
-        document.getElementById('stopBtn').disabled = true;
+        stopBtn.disabled = true;
     };
 
-    document.getElementById('stopBtn').onclick = () => {
-        isRunning = false;
-        addLog("停止リクエストを送信しました...", 'error');
-    };
+    stopBtn.onclick = () => { isRunning = false; addLog("STOPPING...", "error"); };
 </script>
 </body>
 </html>
