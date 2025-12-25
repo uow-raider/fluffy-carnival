@@ -1,160 +1,225 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Discord Auto Setup Tool</title>
-  <style>
-    /* CSS: 元のデザインをベースに、
-       実際の動作に必要なログエリアとボタンの活性化を追加
-    */
-    body { margin: 0; font-family: 'Helvetica Neue', Arial, sans-serif; background: #f2f4f7; color: #2c3e50; }
-    .container { max-width: 500px; margin: 40px auto; background: #ffffff; padding: 30px; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.1); }
-    h1 { text-align: center; margin-bottom: 10px; font-size: 24px; color: #5865F2; }
-    .note { font-size: 12px; color: #d32f2f; background: #fff5f5; padding: 12px; border: 1px solid #ffcdd2; border-radius: 6px; margin-bottom: 20px; line-height: 1.5; }
-    .section { margin-bottom: 20px; }
-    label { display: block; margin-bottom: 8px; font-size: 13px; font-weight: bold; }
-    input[type="text"], input[type="password"] { width: 100%; padding: 12px; border-radius: 6px; border: 1px solid #ccc; font-size: 14px; box-sizing: border-box; transition: border-color 0.2s; }
-    input:focus { outline: none; border-color: #5865F2; }
-    .checkbox-group { background: #f8f9fa; padding: 15px; border-radius: 8px; }
-    .checkbox { display: flex; align-items: center; margin-bottom: 10px; font-size: 14px; color: #444; }
-    .checkbox input { margin-right: 12px; width: 16px; height: 16px; }
-    .run-btn { width: 100%; padding: 15px; font-size: 16px; font-weight: bold; border: none; border-radius: 6px; background: #5865F2; color: #ffffff; cursor: pointer; transition: all 0.3s ease; }
-    .run-btn:hover { background: #4752c4; }
-    .run-btn:disabled { background: #999; cursor: not-allowed; }
-    .log-container { margin-top: 25px; background: #1e1e1e; padding: 15px; border-radius: 8px; display: none; }
-    .status-log { height: 140px; overflow-y: auto; color: #00ff00; font-family: monospace; font-size: 12px; line-height: 1.6; margin-bottom: 10px; }
-    .progress-bar { height: 6px; background: #333; border-radius: 3px; overflow: hidden; }
-    .progress { height: 100%; background: #00ff00; width: 0%; transition: width 0.4s ease; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NOVA TOOL</title>
+    <style>
+        :root {
+            --bg-color: #0d0d15;
+            --card-bg: #1a1a2e;
+            --text-color: #f0f0f5;
+            --primary: #00d4ff;
+            --danger: #ff0055;
+            --border: #2e2e4a;
+            --success: #00ff88;
+        }
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+            margin: 0;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 500px;
+            background: var(--card-bg);
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 0 25px rgba(0, 212, 255, 0.15);
+            border: 1px solid var(--border);
+        }
+
+        header { text-align: center; margin-bottom: 25px; }
+        .brand-title { margin: 0; font-size: 28px; font-weight: 900; letter-spacing: 3px; color: var(--primary); text-shadow: 0 0 10px rgba(0, 212, 255, 0.4); }
+        .subtitle { font-size: 11px; text-transform: uppercase; opacity: 0.6; }
+
+        .section { margin-bottom: 15px; }
+        label { display: block; font-size: 12px; margin-bottom: 5px; color: var(--primary); font-weight: bold; }
+
+        textarea, input {
+            width: 100%; padding: 10px; background: #0a0a1a; border: 1px solid var(--border);
+            border-radius: 8px; color: white; box-sizing: border-box; outline: none; font-family: 'Consolas', monospace;
+        }
+        
+        textarea { height: 100px; resize: none; font-size: 11px; }
+
+        .masked { -webkit-text-security: disc !important; }
+        .view-toggle { font-size: 11px; color: var(--primary); cursor: pointer; text-align: right; margin-top: 5px; text-decoration: underline; user-select: none; }
+
+        .form-row { display: flex; gap: 10px; }
+        .form-row div { flex: 1; }
+
+        .controls { display: flex; gap: 10px; margin-top: 20px; }
+        .btn { flex: 1; padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; text-transform: uppercase; transition: 0.3s; }
+        .btn-primary { background: var(--primary); color: #000; }
+        .btn-primary:hover { opacity: 0.8; box-shadow: 0 0 15px var(--primary); }
+        .btn-danger { background: var(--danger); color: white; }
+        .btn-danger:disabled { background: #333; opacity: 0.5; cursor: not-allowed; }
+
+        /* ログエリア */
+        .status-board {
+            margin-top: 20px; padding: 15px; background: rgba(0,0,0,0.3);
+            border-radius: 8px; font-family: 'Consolas', monospace; font-size: 12px; border: 1px inset var(--border);
+            height: 150px; overflow-y: auto; line-height: 1.4;
+        }
+        .status-summary {
+            margin-top: 10px; display: flex; justify-content: space-between; font-size: 14px;
+            color: var(--primary); font-family: 'Consolas', monospace;
+        }
+
+        .log-entry { margin-bottom: 4px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 2px; }
+        .log-success { color: var(--success); }
+        .log-error { color: var(--danger); }
+        .log-info { color: var(--primary); }
+    </style>
 </head>
 <body>
 
 <div class="container">
-  <h1>Discord Auto Setup</h1>
-  <p class="note">
-    ※ <b>重要</b>: 実際のトークンを使用します。規約違反（Self-bot）によるアカウント停止リスクを承知の上で利用してください。
-  </p>
+    <header>
+        <h1 class="brand-title">NOVA TOOL</h1>
+        <div class="subtitle">Advanced Discord Auto-Onboarding</div>
+    </header>
 
-  <div class="section">
-    <label>アカウントトークン</label>
-    <input type="password" id="token" placeholder="mfa.xxxx...">
-  </div>
-
-  <div class="section">
-    <label>サーバーID</label>
-    <input type="text" id="serverId" placeholder="123456789012345678">
-  </div>
-
-  <div class="section">
-    <label>メッセージURL (リアクション・認証用)</label>
-    <input type="text" id="messageUrl" placeholder="https://discord.com/channels/123/456/789">
-  </div>
-
-  <div class="section">
-    <label>自動アクション設定</label>
-    <div class="checkbox-group">
-      <div class="checkbox">
-        <input type="checkbox" id="step1" checked> <span>✅ リアクションを自動で押す</span>
-      </div>
-      <div class="checkbox">
-        <input type="checkbox" id="step2" checked> <span>💬 認証メッセージを送信</span>
-      </div>
+    <div class="section">
+        <label>DISCORD TOKENS (1行に1つ入力)</label>
+        <textarea id="tokens" class="masked" placeholder="token1&#10;token2&#10;token3"></textarea>
+        <div class="view-toggle" id="toggleView">MASK ON/OFF</div>
     </div>
-  </div>
 
-  <button id="runBtn" class="run-btn">セットアップ実行</button>
+    <div class="form-row">
+        <div class="section">
+            <label>SERVER ID</label>
+            <input type="text" id="serverId" placeholder="1234567890">
+        </div>
+        <div class="section">
+            <label>TARGET MESSAGE ID</label>
+            <input type="text" id="messageId" placeholder="9876543210">
+        </div>
+    </div>
 
-  <div id="logContainer" class="log-container">
-    <div id="statusLog" class="status-log"></div>
-    <div class="progress-bar"><div id="progress" class="progress"></div></div>
-  </div>
+    <div class="section">
+        <label>CHANNEL ID</label>
+        <input type="text" id="channelId" placeholder="555666777">
+    </div>
+
+    <div class="status-board" id="logArea">
+        <div class="log-info">> システム待機中...</div>
+    </div>
+    
+    <div class="status-summary">
+        <span>PROGRESS: <span id="progressText">0%</span></span>
+        <span>SUCCESS: <span id="successCount">0</span></span>
+    </div>
+
+    <div class="controls">
+        <button class="btn btn-danger" id="stopBtn" disabled>STOP</button>
+        <button class="btn btn-primary" id="startBtn">EXECUTE</button>
+    </div>
 </div>
 
 <script>
-/* JavaScript: API連携ロジック */
-document.getElementById('runBtn').addEventListener('click', async function() {
-    const token = document.getElementById('token').value.trim();
-    const serverId = document.getElementById('serverId').value.trim();
-    const msgUrl = document.getElementById('messageUrl').value.trim();
-    
-    const btn = this;
-    const logArea = document.getElementById('statusLog');
-    const logContainer = document.getElementById('logContainer');
-    const progressBar = document.getElementById('progress');
+    const tokensInput = document.getElementById('tokens');
+    const toggleView = document.getElementById('toggleView');
+    const logArea = document.getElementById('logArea');
+    const startBtn = document.getElementById('startBtn');
+    const progressText = document.getElementById('progressText');
+    const successCountElem = document.getElementById('successCount');
 
-    if (!token || !serverId || !msgUrl) {
-        alert("すべての項目を正しく入力してください。");
-        return;
-    }
+    let isRunning = false;
 
-    // URLからChannelIDとMessageIDを抽出
-    const urlParts = msgUrl.split('/');
-    const messageId = urlParts.pop();
-    const channelId = urlParts.pop();
-
-    // UI更新
-    btn.disabled = true;
-    btn.innerText = "実行中...";
-    logContainer.style.display = 'block';
-    logArea.innerHTML = "";
-    progressBar.style.width = "0%";
-
-    const addLog = (msg, isError = false) => {
-        const div = document.createElement('div');
-        div.style.color = isError ? "#ff4d4d" : "#00ff00";
-        div.textContent = `> ${msg}`;
-        logArea.appendChild(div);
-        logArea.scrollTop = logArea.scrollHeight;
+    // トークンの表示切り替え
+    toggleView.onclick = () => {
+        tokensInput.classList.toggle('masked');
     };
 
-    try {
-        addLog(`サーバー (${serverId}) への接続を試行中...`);
+    function addLog(msg, type = 'info') {
+        const div = document.createElement('div');
+        div.className = `log-entry log-${type}`;
+        div.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+        logArea.appendChild(div);
+        logArea.scrollTop = logArea.scrollHeight;
+    }
 
-        // STEP 1: リアクション
-        if (document.getElementById('step1').checked) {
-            addLog("リアクションを送信...");
+    async function executeAction(token, channelId, messageId, serverId) {
+        try {
+            // リアクション送信 (✅)
             const emoji = encodeURIComponent("✅");
             const res = await fetch(`https://discord.com/api/v9/channels/${channelId}/messages/${messageId}/reactions/${emoji}/@me`, {
                 method: "PUT",
                 headers: { "Authorization": token }
             });
 
-            if (res.status === 204) addLog("成功: リアクション完了");
-            else addLog(`失敗: Code ${res.status}`, true);
-            
-            progressBar.style.width = "50%";
-            await new Promise(r => setTimeout(r, 1200));
+            if (res.status === 204) {
+                return true;
+            } else {
+                console.error(`Error: ${res.status}`);
+                return false;
+            }
+        } catch (e) {
+            return false;
         }
-
-        // STEP 2: メッセージ送信 (サーバーIDを文脈に含める等)
-        if (document.getElementById('step2').checked) {
-            addLog("認証メッセージを送信...");
-            const res = await fetch(`https://discord.com/api/v9/channels/${channelId}/messages`, {
-                method: "POST",
-                headers: {
-                    "Authorization": token,
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({ content: "ルールに同意し、セットアップを完了します。" })
-            });
-
-            if (res.ok) addLog("成功: 認証メッセージ送信完了");
-            else addLog(`失敗: Code ${res.status}`, true);
-            
-            progressBar.style.width = "100%";
-        }
-
-        addLog("すべての処理を完了しました。");
-        btn.innerText = "完了";
-        btn.style.background = "#2ecc71";
-
-    } catch (err) {
-        addLog(`エラー発生: ${err.message}`, true);
-        btn.disabled = false;
-        btn.innerText = "再試行";
     }
-});
+
+    startBtn.onclick = async () => {
+        const tokens = tokensInput.value.split('\n').map(t => t.trim()).filter(t => t !== "");
+        const sId = document.getElementById('serverId').value.trim();
+        const cId = document.getElementById('channelId').value.trim();
+        const mId = document.getElementById('messageId').value.trim();
+
+        if (tokens.length === 0 || !sId || !cId || !mId) {
+            alert("全てのフィールドを入力してください");
+            return;
+        }
+
+        isRunning = true;
+        startBtn.disabled = true;
+        document.getElementById('stopBtn').disabled = false;
+        logArea.innerHTML = "";
+        let successTotal = 0;
+
+        addLog(`${tokens.length}個のトークンで処理を開始します...`, 'info');
+
+        for (let i = 0; i < tokens.length; i++) {
+            if (!isRunning) break;
+
+            const token = tokens[i];
+            const maskedToken = token.substring(0, 10) + "****";
+            addLog(`処理中: ${maskedToken}...`);
+
+            const success = await executeAction(token, cId, mId, sId);
+
+            if (success) {
+                successTotal++;
+                successCountElem.textContent = successTotal;
+                addLog(`成功: ${maskedToken}`, 'success');
+            } else {
+                addLog(`失敗: ${maskedToken}`, 'error');
+            }
+
+            // 進捗更新
+            progressText.textContent = Math.round(((i + 1) / tokens.length) * 100) + "%";
+            
+            // API制限(Rate Limit)を考慮した待機 (1秒)
+            await new Promise(r => setTimeout(r, 1000));
+        }
+
+        addLog("全工程が終了しました。", 'info');
+        isRunning = false;
+        startBtn.disabled = false;
+        document.getElementById('stopBtn').disabled = true;
+    };
+
+    document.getElementById('stopBtn').onclick = () => {
+        isRunning = false;
+        addLog("停止リクエストを送信しました...", 'error');
+    };
 </script>
 </body>
 </html>
