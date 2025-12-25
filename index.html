@@ -3,48 +3,60 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Discord Onboarding Tool (Functional)</title>
-  <link rel="stylesheet" href="style.css">
+  <title>Discord Auto Setup Tool</title>
+  <style>
+    body { margin: 0; font-family: sans-serif; background: #f2f4f7; color: #333; }
+    .container { max-width: 500px; margin: 40px auto; background: #fff; padding: 25px; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+    h1 { text-align: center; font-size: 22px; color: #5865F2; }
+    .note { font-size: 12px; color: #c0392b; background: #fdf2f2; padding: 10px; border-radius: 5px; margin-bottom: 20px; line-height: 1.4; }
+    .section { margin-bottom: 15px; }
+    label { display: block; margin-bottom: 5px; font-size: 13px; font-weight: bold; }
+    input { width: 100%; padding: 10px; border-radius: 5px; border: 1px solid #ccc; box-sizing: border-box; font-size: 14px; }
+    .checkbox-group { background: #f9f9f9; padding: 10px; border-radius: 5px; margin-top: 10px; }
+    .checkbox { display: flex; align-items: center; margin-bottom: 8px; font-size: 13px; }
+    .checkbox input { width: auto; margin-right: 10px; }
+    .run-btn { width: 100%; padding: 12px; font-size: 16px; border: none; border-radius: 5px; background: #5865F2; color: #fff; cursor: pointer; font-weight: bold; transition: 0.2s; }
+    .run-btn:hover { background: #4752c4; }
+    .run-btn:disabled { background: #999; cursor: not-allowed; }
+    .log-container { margin-top: 20px; background: #1e1e1e; color: #00ff00; padding: 15px; border-radius: 5px; font-family: monospace; font-size: 12px; display: none; }
+    .status-log { height: 150px; overflow-y: auto; white-space: pre-wrap; margin-bottom: 10px; border-bottom: 1px solid #444; }
+    .progress-bar { height: 4px; background: #444; border-radius: 2px; }
+    .progress { height: 100%; background: #00ff00; width: 0%; transition: width 0.3s; }
+  </style>
 </head>
 <body>
 
 <div class="container">
   <h1>Discord Auto Setup</h1>
   <p class="note">
-    ※ これはシミュレーターです。実際のアカウント操作は行いません。
+    【警告】本ツールの使用はDiscordの規約違反（Self-bot）に該当します。アカウント停止のリスクを理解した上で、自己責任で利用してください。
   </p>
 
   <div class="section">
-    <label>サーバーID</label>
-    <input type="text" id="serverId" placeholder="123456789012345678">
+    <label>アカウントトークン</label>
+    <input type="password" id="token" placeholder="mfa.xxxx...">
   </div>
 
   <div class="section">
     <label>メッセージURL</label>
-    <input type="text" id="messageUrl" placeholder="https://discord.com/channels/...">
+    <input type="text" id="messageUrl" placeholder="https://discord.com/channels/123/456/789">
   </div>
 
   <div class="section">
-    <h2>自動アクション設定</h2>
-    <div class="checkbox">
-      <input type="checkbox" id="step1" checked>
-      <span>リアクションを自動で押す</span>
-    </div>
-    <div class="checkbox">
-      <input type="checkbox" id="step2" checked>
-      <span>メールアドレス認証質問に回答</span>
-    </div>
-    <div class="checkbox">
-      <input type="checkbox" id="step3" checked>
-      <span>オンボーディングを完了</span>
+    <label>自動アクション設定</label>
+    <div class="checkbox-group">
+      <div class="checkbox">
+        <input type="checkbox" id="step1" checked> <span>✅ リアクションを自動で押す</span>
+      </div>
+      <div class="checkbox">
+        <input type="checkbox" id="step2" checked> <span>💬 認証メッセージを送信</span>
+      </div>
     </div>
   </div>
 
-  <button id="runBtn" class="run-btn active">
-    セットアップ実行
-  </button>
+  <button id="runBtn" class="run-btn">セットアップ実行</button>
 
-  <div id="logContainer" class="log-container" style="display: none;">
+  <div id="logContainer" class="log-container">
     <div id="statusLog" class="status-log"></div>
     <div class="progress-bar"><div id="progress" class="progress"></div></div>
   </div>
