@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Discord Onboarding Tool (Functional)</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="container">
+  <h1>Discord Auto Setup</h1>
+  <p class="note">
+    ※ これはシミュレーターです。実際のアカウント操作は行いません。
+  </p>
+
+  <div class="section">
+    <label>サーバーID</label>
+    <input type="text" id="serverId" placeholder="123456789012345678">
+  </div>
+
+  <div class="section">
+    <label>メッセージURL</label>
+    <input type="text" id="messageUrl" placeholder="https://discord.com/channels/...">
+  </div>
+
+  <div class="section">
+    <h2>自動アクション設定</h2>
+    <div class="checkbox">
+      <input type="checkbox" id="step1" checked>
+      <span>リアクションを自動で押す</span>
+    </div>
+    <div class="checkbox">
+      <input type="checkbox" id="step2" checked>
+      <span>メールアドレス認証質問に回答</span>
+    </div>
+    <div class="checkbox">
+      <input type="checkbox" id="step3" checked>
+      <span>オンボーディングを完了</span>
+    </div>
+  </div>
+
+  <button id="runBtn" class="run-btn active">
+    セットアップ実行
+  </button>
+
+  <div id="logContainer" class="log-container" style="display: none;">
+    <div id="statusLog" class="status-log"></div>
+    <div class="progress-bar"><div id="progress" class="progress"></div></div>
+  </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
