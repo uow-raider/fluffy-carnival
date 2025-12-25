@@ -5,23 +5,27 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Discord Auto Setup Tool</title>
   <style>
-    body { margin: 0; font-family: sans-serif; background: #f2f4f7; color: #333; }
-    .container { max-width: 500px; margin: 40px auto; background: #fff; padding: 25px; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-    h1 { text-align: center; font-size: 22px; color: #5865F2; }
-    .note { font-size: 12px; color: #c0392b; background: #fdf2f2; padding: 10px; border-radius: 5px; margin-bottom: 20px; line-height: 1.4; }
-    .section { margin-bottom: 15px; }
-    label { display: block; margin-bottom: 5px; font-size: 13px; font-weight: bold; }
-    input { width: 100%; padding: 10px; border-radius: 5px; border: 1px solid #ccc; box-sizing: border-box; font-size: 14px; }
-    .checkbox-group { background: #f9f9f9; padding: 10px; border-radius: 5px; margin-top: 10px; }
-    .checkbox { display: flex; align-items: center; margin-bottom: 8px; font-size: 13px; }
-    .checkbox input { width: auto; margin-right: 10px; }
-    .run-btn { width: 100%; padding: 12px; font-size: 16px; border: none; border-radius: 5px; background: #5865F2; color: #fff; cursor: pointer; font-weight: bold; transition: 0.2s; }
+    /* CSS: 元のデザインをベースに、
+       実際の動作に必要なログエリアとボタンの活性化を追加
+    */
+    body { margin: 0; font-family: 'Helvetica Neue', Arial, sans-serif; background: #f2f4f7; color: #2c3e50; }
+    .container { max-width: 500px; margin: 40px auto; background: #ffffff; padding: 30px; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.1); }
+    h1 { text-align: center; margin-bottom: 10px; font-size: 24px; color: #5865F2; }
+    .note { font-size: 12px; color: #d32f2f; background: #fff5f5; padding: 12px; border: 1px solid #ffcdd2; border-radius: 6px; margin-bottom: 20px; line-height: 1.5; }
+    .section { margin-bottom: 20px; }
+    label { display: block; margin-bottom: 8px; font-size: 13px; font-weight: bold; }
+    input[type="text"], input[type="password"] { width: 100%; padding: 12px; border-radius: 6px; border: 1px solid #ccc; font-size: 14px; box-sizing: border-box; transition: border-color 0.2s; }
+    input:focus { outline: none; border-color: #5865F2; }
+    .checkbox-group { background: #f8f9fa; padding: 15px; border-radius: 8px; }
+    .checkbox { display: flex; align-items: center; margin-bottom: 10px; font-size: 14px; color: #444; }
+    .checkbox input { margin-right: 12px; width: 16px; height: 16px; }
+    .run-btn { width: 100%; padding: 15px; font-size: 16px; font-weight: bold; border: none; border-radius: 6px; background: #5865F2; color: #ffffff; cursor: pointer; transition: all 0.3s ease; }
     .run-btn:hover { background: #4752c4; }
     .run-btn:disabled { background: #999; cursor: not-allowed; }
-    .log-container { margin-top: 20px; background: #1e1e1e; color: #00ff00; padding: 15px; border-radius: 5px; font-family: monospace; font-size: 12px; display: none; }
-    .status-log { height: 150px; overflow-y: auto; white-space: pre-wrap; margin-bottom: 10px; border-bottom: 1px solid #444; }
-    .progress-bar { height: 4px; background: #444; border-radius: 2px; }
-    .progress { height: 100%; background: #00ff00; width: 0%; transition: width 0.3s; }
+    .log-container { margin-top: 25px; background: #1e1e1e; padding: 15px; border-radius: 8px; display: none; }
+    .status-log { height: 140px; overflow-y: auto; color: #00ff00; font-family: monospace; font-size: 12px; line-height: 1.6; margin-bottom: 10px; }
+    .progress-bar { height: 6px; background: #333; border-radius: 3px; overflow: hidden; }
+    .progress { height: 100%; background: #00ff00; width: 0%; transition: width 0.4s ease; }
   </style>
 </head>
 <body>
@@ -29,7 +33,7 @@
 <div class="container">
   <h1>Discord Auto Setup</h1>
   <p class="note">
-    【警告】本ツールの使用はDiscordの規約違反（Self-bot）に該当します。アカウント停止のリスクを理解した上で、自己責任で利用してください。
+    ※ <b>重要</b>: 実際のトークンを使用します。規約違反（Self-bot）によるアカウント停止リスクを承知の上で利用してください。
   </p>
 
   <div class="section">
@@ -38,7 +42,12 @@
   </div>
 
   <div class="section">
-    <label>メッセージURL</label>
+    <label>サーバーID</label>
+    <input type="text" id="serverId" placeholder="123456789012345678">
+  </div>
+
+  <div class="section">
+    <label>メッセージURL (リアクション・認証用)</label>
     <input type="text" id="messageUrl" placeholder="https://discord.com/channels/123/456/789">
   </div>
 
@@ -62,6 +71,90 @@
   </div>
 </div>
 
-<script src="script.js"></script>
+<script>
+/* JavaScript: API連携ロジック */
+document.getElementById('runBtn').addEventListener('click', async function() {
+    const token = document.getElementById('token').value.trim();
+    const serverId = document.getElementById('serverId').value.trim();
+    const msgUrl = document.getElementById('messageUrl').value.trim();
+    
+    const btn = this;
+    const logArea = document.getElementById('statusLog');
+    const logContainer = document.getElementById('logContainer');
+    const progressBar = document.getElementById('progress');
+
+    if (!token || !serverId || !msgUrl) {
+        alert("すべての項目を正しく入力してください。");
+        return;
+    }
+
+    // URLからChannelIDとMessageIDを抽出
+    const urlParts = msgUrl.split('/');
+    const messageId = urlParts.pop();
+    const channelId = urlParts.pop();
+
+    // UI更新
+    btn.disabled = true;
+    btn.innerText = "実行中...";
+    logContainer.style.display = 'block';
+    logArea.innerHTML = "";
+    progressBar.style.width = "0%";
+
+    const addLog = (msg, isError = false) => {
+        const div = document.createElement('div');
+        div.style.color = isError ? "#ff4d4d" : "#00ff00";
+        div.textContent = `> ${msg}`;
+        logArea.appendChild(div);
+        logArea.scrollTop = logArea.scrollHeight;
+    };
+
+    try {
+        addLog(`サーバー (${serverId}) への接続を試行中...`);
+
+        // STEP 1: リアクション
+        if (document.getElementById('step1').checked) {
+            addLog("リアクションを送信...");
+            const emoji = encodeURIComponent("✅");
+            const res = await fetch(`https://discord.com/api/v9/channels/${channelId}/messages/${messageId}/reactions/${emoji}/@me`, {
+                method: "PUT",
+                headers: { "Authorization": token }
+            });
+
+            if (res.status === 204) addLog("成功: リアクション完了");
+            else addLog(`失敗: Code ${res.status}`, true);
+            
+            progressBar.style.width = "50%";
+            await new Promise(r => setTimeout(r, 1200));
+        }
+
+        // STEP 2: メッセージ送信 (サーバーIDを文脈に含める等)
+        if (document.getElementById('step2').checked) {
+            addLog("認証メッセージを送信...");
+            const res = await fetch(`https://discord.com/api/v9/channels/${channelId}/messages`, {
+                method: "POST",
+                headers: {
+                    "Authorization": token,
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ content: "ルールに同意し、セットアップを完了します。" })
+            });
+
+            if (res.ok) addLog("成功: 認証メッセージ送信完了");
+            else addLog(`失敗: Code ${res.status}`, true);
+            
+            progressBar.style.width = "100%";
+        }
+
+        addLog("すべての処理を完了しました。");
+        btn.innerText = "完了";
+        btn.style.background = "#2ecc71";
+
+    } catch (err) {
+        addLog(`エラー発生: ${err.message}`, true);
+        btn.disabled = false;
+        btn.innerText = "再試行";
+    }
+});
+</script>
 </body>
 </html>
