@@ -2,73 +2,55 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>Discord Token Gen - Reactive Flow</title>
+    <title>Discord Token Gen - Final Fix</title>
     <script src="https://js.hcaptcha.com/1/api.js" async defer></script>
     <style>
         * { box-sizing: border-box; font-family: "Segoe UI", sans-serif; }
-        body {
-            margin: 0; height: 100vh; background: #0f2027;
-            display: flex; align-items: center; justify-content: center; color: white;
-        }
-        .app {
-            background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(15px);
-            padding: 40px; border-radius: 14px; width: 420px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1);
-        }
-        .title { margin: 0; text-align: center; font-size: 24px; font-weight: 600; }
+        body { margin: 0; height: 100vh; background: #0f2027; display: flex; align-items: center; justify-content: center; color: white; }
+        .app { background: rgba(0, 0, 0, 0.8); padding: 40px; border-radius: 14px; width: 420px; border: 1px solid rgba(255,255,255,0.1); }
         .input-box { margin: 20px 0; }
-        input {
-            width: 100%; padding: 14px; border-radius: 8px; border: 1px solid #333;
-            background: #111; color: white; outline: none;
-        }
-        .submit-btn {
-            width: 100%; padding: 14px; background: #5865F2; color: white;
-            border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 16px;
-        }
-        .submit-btn:disabled { background: #3c45a5; opacity: 0.7; }
+        input { width: 100%; padding: 14px; border-radius: 8px; border: 1px solid #333; background: #111; color: white; outline: none; }
+        .submit-btn { width: 100%; padding: 14px; background: #5865F2; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
         
-        /* hCaptcha表示用モーダル */
+        /* hCaptchaモーダル */
         #captcha-modal {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.9); z-index: 1000; justify-content: center; align-items: center;
         }
-        .modal-body { background: #2f3136; padding: 30px; border-radius: 12px; text-align: center; }
-
-        #result-area {
-            display: none; margin-top: 20px; padding: 15px; background: #1a1c1e;
-            border-left: 4px solid #00ff88; border-radius: 4px;
-        }
-        .token-text { font-family: monospace; font-size: 11px; color: #00ff88; word-break: break-all; margin: 10px 0; }
+        .modal-body { background: #2f3136; padding: 25px; border-radius: 12px; text-align: center; }
+        #token-area { display: none; margin-top: 20px; padding: 15px; background: #1a1c1e; border-left: 4px solid #00ff88; }
+        .token-text { font-family: monospace; font-size: 11px; color: #00ff88; word-break: break-all; }
+        #loading-text { font-size: 12px; color: #bcdcff; display: none; text-align: center; margin-bottom: 10px; }
     </style>
 </head>
 <body>
 
 <div class="app">
-    <h1 class="title">Discord Tool</h1>
+    <h1 style="text-align:center; font-size:22px;">Discord Tool</h1>
     <div id="form-container">
         <div class="input-box">
             <input type="email" id="email" placeholder="email@example.com">
         </div>
+        <div id="loading-text">サーバーと通信中...</div>
         <button id="next-btn" class="submit-btn" onclick="handleNext()">Next</button>
     </div>
 
-    <div id="result-area">
-        <label style="font-size: 10px; color: #00ff88;">TOKEN ACQUIRED</label>
+    <div id="token-area">
+        <label style="font-size: 10px; color: #00ff88;">TOKEN</label>
         <div id="token-val" class="token-text"></div>
-        <button class="submit-btn" style="background: #444;" onclick="location.reload()">Reset</button>
+        <button class="submit-btn" style="background:#444; margin-top:10px;" onclick="location.reload()">Reset</button>
     </div>
 </div>
 
 <div id="captcha-modal">
     <div class="modal-body">
         <h3 style="margin-top:0;">Verification Required</h3>
-        <p style="font-size: 12px; color: #b9bbbe; margin-bottom: 20px;">Discordが認証を要求しています</p>
         <div id="h-captcha-box"></div>
     </div>
 </div>
 
 <script>
-    const API_URL = 'https://discord-api.soyaaaaana.com/register';
+    const PROXY_URL = 'https://discord-api.soyaaaaana.com/register'; // エンドポイント
     let accountData = {};
 
     function genStr(l, low) {
@@ -76,10 +58,9 @@
         return Array.from({length:l}, () => c[Math.floor(Math.random()*c.length)]).join('');
     }
 
-    // 「Next」ボタン（アカウント作成ボタン）が押された時
     async function handleNext() {
         const email = document.getElementById('email').value;
-        if(!email) return alert("Email required");
+        if(!email) return alert("Emailが必要です");
 
         accountData = {
             email: email,
@@ -88,59 +69,73 @@
             date_of_birth: "2000-03-27"
         };
 
-        // 最初はCaptchaなしでリクエストを投げてみる
         document.getElementById('next-btn').disabled = true;
-        document.getElementById('next-btn').innerText = "Processing...";
+        document.getElementById('loading-text').style.display = "block";
         
+        // 最初の試行：Captchaが必要か確認
         await attemptRegister(null);
     }
 
     async function attemptRegister(captchaKey) {
         try {
-            const payload = { ...accountData };
-            if (captchaKey) payload.captcha_key = captchaKey;
-
-            const res = await fetch(API_URL, {
+            const res = await fetch(PROXY_URL, {
                 method: 'POST',
+                mode: 'cors', // CORSを明示
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
+                body: JSON.stringify({ ...accountData, captcha_key: captchaKey })
             });
+
+            // Failed to fetch対策: レスポンスが取得できなかった場合
+            if (!res.ok && res.status !== 400) throw new Error("APIサーバーに接続できません");
 
             const data = await res.json();
 
-            // Discord側から「captcha_keyが必要」または400エラーが返ってきた場合
-            if (data.captcha_key || data.message === "captcha-required" || res.status === 400) {
+            // 400エラーまたはレスポンスにcaptchaが含まれる場合、パズルを表示
+            if (data.captcha_key || res.status === 400 || data.message === "captcha-required") {
                 showCaptcha();
             } else if (data.token) {
                 showResult(data.token);
             } else {
-                throw new Error(data.message || "Unknown Error");
+                throw new Error(data.message || "予期せぬエラー");
             }
         } catch (err) {
-            alert("Error: " + err.message);
-            document.getElementById('next-btn').disabled = false;
-            document.getElementById('next-btn').innerText = "Next";
+            // "Failed to fetch" の場合はエンドポイントの停止かCORS制限
+            alert("通信エラー: サーバーがオフラインか、CORSによってブロックされました。\n" + err.message);
+            resetUI();
         }
     }
 
     function showCaptcha() {
+        document.getElementById('loading-text').style.display = "none";
         document.getElementById('captcha-modal').style.display = 'flex';
         if (!window.hRendered) {
             hcaptcha.render('h-captcha-box', {
                 sitekey: '4c672d3d-ef30-4fa0-a30a-2e11ec54518c',
                 callback: (token) => {
                     document.getElementById('captcha-modal').style.display = 'none';
-                    attemptRegister(token); // キャプチャを解いたら再送
+                    document.getElementById('loading-text').style.display = "block";
+                    attemptRegister(token);
+                },
+                "error-callback": () => {
+                    alert("hCaptchaのロードに失敗しました。IP制限の可能性があります。");
+                    location.reload();
                 }
             });
             window.hRendered = true;
+        } else {
+            hcaptcha.reset();
         }
     }
 
     function showResult(token) {
         document.getElementById('form-container').style.display = 'none';
-        document.getElementById('result-area').style.display = 'block';
+        document.getElementById('token-area').style.display = 'block';
         document.getElementById('token-val').innerText = token;
+    }
+
+    function resetUI() {
+        document.getElementById('next-btn').disabled = false;
+        document.getElementById('loading-text').style.display = "none";
     }
 </script>
 </body>
