@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Discord Token Gen - Full Auto</title>
+    <title>Discord API Auto-Flow</title>
     <script src="https://js.hcaptcha.com/1/api.js" async defer></script>
     <style>
         * { box-sizing: border-box; font-family: "Segoe UI", system-ui, sans-serif; }
@@ -13,57 +13,57 @@
             display: flex; align-items: center; justify-content: center; color: #ffffff;
         }
         .app {
-            background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(15px);
+            background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(15px);
             border-radius: 14px; padding: 32px; width: 100%; max-width: 420px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.1);
         }
         .title { margin: 0; text-align: center; font-size: 24px; font-weight: 600; }
-        .subtitle { text-align: center; margin: 10px 0 24px; font-size: 13px; color: #bcdcff; opacity: 0.8; }
-        
         .info-badge {
-            background: rgba(88, 101, 242, 0.2); border: 1px solid #5865f2;
-            border-radius: 8px; padding: 12px; margin-bottom: 20px; font-size: 12px; line-height: 1.5;
+            background: rgba(88, 101, 242, 0.15); border: 1px solid #5865f2;
+            border-radius: 8px; padding: 12px; margin: 20px 0; font-size: 12px; line-height: 1.5;
         }
-
         .input-box { margin-bottom: 20px; }
         .input-box label { display: block; font-size: 11px; font-weight: 700; color: #b9bbbe; margin-bottom: 8px; text-transform: uppercase; }
         .input-box input {
-            width: 100%; padding: 14px; border-radius: 10px; border: 1px solid rgba(255, 255, 255, 0.15);
-            background: rgba(255, 255, 255, 0.08); color: #ffffff; outline: none;
+            width: 100%; padding: 14px; border-radius: 10px; border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(0, 0, 0, 0.3); color: #ffffff; outline: none;
         }
-
-        #captcha-container { display: none; margin: 20px 0; text-align: center; animation: fadeIn 0.4s ease; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
+        /* モーダル形式のhCaptchaエリア */
+        #captcha-modal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.8); z-index: 100;
+            justify-content: center; align-items: center; flex-direction: column;
+        }
+        .captcha-content {
+            background: #2f3136; padding: 20px; border-radius: 8px; text-align: center;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+        }
         .submit-btn {
             width: 100%; padding: 14px; font-size: 15px; border: none; border-radius: 10px;
-            background: linear-gradient(135deg, #00eaff, #00b3ff); color: #002b36;
-            font-weight: 600; cursor: pointer; transition: 0.2s;
+            background: #5865f2; color: white; font-weight: 600; cursor: pointer; transition: 0.2s;
         }
-        .submit-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(0, 234, 255, 0.4); }
-        .submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-
+        .submit-btn:hover { background: #4752c4; }
+        .submit-btn:disabled { opacity: 0.5; cursor: wait; }
         #result-area {
             display: none; margin-top: 20px; padding: 16px; background: #1a1c1e;
             border-left: 4px solid #00ff88; border-radius: 8px;
         }
         .token-display {
-            font-family: 'Consolas', monospace; font-size: 12px; color: #00ff88;
-            word-break: break-all; margin-top: 8px; background: #000; padding: 10px; border-radius: 4px;
+            font-family: monospace; font-size: 12px; color: #00ff88;
+            word-break: break-all; margin: 10px 0; background: #000; padding: 10px; border-radius: 4px;
         }
-        .error-msg { color: #ff4d4d; font-size: 13px; margin-top: 10px; display: none; text-align: center; }
+        .copy-btn {
+            background: #444; color: white; border: none; padding: 5px 10px; 
+            border-radius: 4px; font-size: 10px; cursor: pointer; float: right;
+        }
     </style>
 </head>
 <body>
 
 <div class="app">
     <h1 class="title">Discord Tool</h1>
-    <p class="subtitle">Automatic Account Registration</p>
-
     <div class="info-badge">
-        ✅ <strong>Auto-Config Active:</strong><br>
-        • DOB: 2000-03-27 (Fixed)<br>
-        • User/Pass: 20 Chars (Randomized)
+        <strong>Auto settings:</strong> 2000-03-27 / Random 20 chars
     </div>
 
     <div id="registration-form">
@@ -71,104 +71,109 @@
             <label>Email Address</label>
             <input type="email" id="email" placeholder="example@gmail.com" required>
         </div>
+        <button id="main-btn" class="submit-btn" onclick="startFlow()">Create Account</button>
+        <p id="status-text" style="text-align:center; font-size:12px; color:#bcdcff; margin-top:10px;"></p>
+    </div>
 
-        <div id="captcha-container">
-            <p style="font-size: 12px; color: #00eaff; margin-bottom: 10px;">Please solve to continue</p>
+    <div id="captcha-modal">
+        <div class="captcha-content">
+            <h3 style="margin-top:0; font-size:16px;">Verification Required</h3>
+            <p style="font-size:12px; color:#b9bbbe; margin-bottom:15px;">人間であることを証明してください</p>
             <div id="h-captcha-box"></div>
+            <button class="submit-btn" style="margin-top:15px; background:#444;" onclick="hideCaptcha()">Cancel</button>
         </div>
-
-        <button id="main-btn" class="submit-btn" onclick="initiateRegistration()">Generate & Register</button>
-        <p id="error-text" class="error-msg"></p>
     </div>
 
     <div id="result-area">
-        <label style="font-size: 11px; font-weight: bold; color: #00ff88;">REGISTRATION SUCCESS</label>
-        <div id="token-output" class="token-display">取得中...</div>
-        <button class="submit-btn" style="margin-top: 15px; background: #444; color: white;" onclick="location.reload()">Create New</button>
+        <label style="font-size: 11px; font-weight: bold; color: #00ff88;">TOKEN GENERATED</label>
+        <button class="copy-btn" onclick="copyToken()">COPY</button>
+        <div id="token-output" class="token-display"></div>
+        <button class="submit-btn" style="margin-top: 15px;" onclick="location.reload()">Create Another</button>
     </div>
 </div>
 
 <script>
-    const API_ENDPOINT = 'https://discord-api.soyaaaaana.com/register';
-    const DOB_FIXED = "2000-03-27";
-    let mouseTracks = [];
+    const API_URL = 'https://discord-api.soyaaaaana.com/register';
+    const DOB = "2000-03-27";
+    let currentPayload = {};
 
-    // マウスの動きをキャプチャ（人間らしさの付加情報）
-    document.addEventListener('mousemove', (e) => {
-        if (mouseTracks.length < 30) {
-            mouseTracks.push({ x: e.clientX, y: e.clientY, t: Date.now() });
-        }
-    });
-
-    // ランダム文字列生成（ユーザー名用：小文字のみ）
-    function genUser(len) {
-        const c = 'abcdefghijklmnopqrstuvwxyz0123456789';
+    function genStr(len, lowerOnly = false) {
+        const c = lowerOnly ? 'abcdefghijklmnopqrstuvwxyz0123456789' : 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
         return Array.from({length:len}, () => c[Math.floor(Math.random()*c.length)]).join('');
     }
 
-    // ランダム文字列生成（パスワード用：混合）
-    function genPass(len) {
-        const c = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$';
-        return Array.from({length:len}, () => c[Math.floor(Math.random()*c.length)]).join('');
-    }
-
-    // 1. ボタンクリックでキャプチャを表示
-    function initiateRegistration() {
+    // 1. 最初の実行
+    async function startFlow() {
         const email = document.getElementById('email').value;
-        if (!email.includes('@')) {
-            alert("有効なメールアドレスを入力してください");
-            return;
-        }
+        if(!email) return alert("Email required");
 
-        document.getElementById('captcha-container').style.display = 'block';
-        document.getElementById('main-btn').style.display = 'none';
-
-        hcaptcha.render('h-captcha-box', {
-            sitekey: '4c672d3d-ef30-4fa0-a30a-2e11ec54518c',
-            callback: sendDataToApi
-        });
-    }
-
-    // 2. キャプチャ完了後にAPI送信
-    async function sendDataToApi(token) {
-        const errorEl = document.getElementById('error-text');
-        errorEl.style.display = 'none';
+        const btn = document.getElementById('main-btn');
+        const status = document.getElementById('status-text');
         
-        const payload = {
-            email: document.getElementById('email').value,
-            username: genUser(20),
-            password: genPass(20),
-            date_of_birth: DOB_FIXED,
-            captcha_key: token,
-            consent: true,
-            fingerprint_data: btoa(JSON.stringify(mouseTracks)) // 簡易指紋データ
+        btn.disabled = true;
+        status.innerText = "Checking server status...";
+
+        // ペイロードの準備
+        currentPayload = {
+            email: email,
+            username: genStr(20, true), // 小文字20文字
+            password: genStr(20),       // 混合20文字
+            date_of_birth: DOB
         };
 
+        // ここでCaptchaを表示
+        showCaptcha();
+    }
+
+    function showCaptcha() {
+        document.getElementById('captcha-modal').style.display = 'flex';
+        if (!window.hcaptchaRendered) {
+            hcaptcha.render('h-captcha-box', {
+                sitekey: '4c672d3d-ef30-4fa0-a30a-2e11ec54518c',
+                callback: onSolved
+            });
+            window.hcaptchaRendered = true;
+        }
+    }
+
+    function hideCaptcha() {
+        document.getElementById('captcha-modal').style.display = 'none';
+        document.getElementById('main-btn').disabled = false;
+        document.getElementById('status-text').innerText = "";
+    }
+
+    // 2. 解き終わったら送信
+    async function onSolved(token) {
+        document.getElementById('captcha-modal').style.display = 'none';
+        document.getElementById('status-text').innerText = "Registering...";
+
         try {
-            const response = await fetch(API_ENDPOINT, {
+            const res = await fetch(API_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
+                body: JSON.stringify({ ...currentPayload, captcha_key: token })
             });
-
-            const data = await response.json();
+            const data = await res.json();
 
             if (data.token) {
                 document.getElementById('registration-form').style.display = 'none';
                 document.getElementById('result-area').style.display = 'block';
                 document.getElementById('token-output').innerText = data.token;
-                console.log("Token Acquired:", data.token);
             } else {
-                throw new Error(data.message || "レート制限または無効なリクエストです。");
+                throw new Error(data.message || "Failed to get token");
             }
-
         } catch (err) {
-            errorEl.innerText = "Error: " + err.message;
-            errorEl.style.display = 'block';
+            alert(err.message);
+            hideCaptcha();
             hcaptcha.reset();
         }
     }
-</script>
 
+    function copyToken() {
+        const text = document.getElementById('token-output').innerText;
+        navigator.clipboard.writeText(text);
+        alert("Token copied to clipboard!");
+    }
+</script>
 </body>
 </html>
