@@ -2,169 +2,145 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Discord Account Creator Interface</title>
+    <title>Discord API Integration Tool</title>
     <script src="https://js.hcaptcha.com/1/api.js" async defer></script>
     <style>
-        * {
-            box-sizing: border-box;
-            font-family: "Segoe UI", system-ui, sans-serif;
-        }
-
+        * { box-sizing: border-box; font-family: "Segoe UI", Tahoma, sans-serif; }
         body {
-            margin: 0;
-            height: 100vh;
-            background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #ffffff;
-            overflow: hidden;
+            margin: 0; height: 100vh;
+            background: linear-gradient(135deg, #0f2027, #2c5364);
+            display: flex; align-items: center; justify-content: center; color: white;
         }
-
         .app {
-            background: rgba(0, 0, 0, 0.6);
-            backdrop-filter: blur(15px);
-            border-radius: 16px;
-            padding: 40px;
-            width: 100%;
-            max-width: 450px;
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            text-align: center;
+            background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(20px);
+            padding: 40px; border-radius: 12px; width: 440px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.7); border: 1px solid rgba(255,255,255,0.1);
         }
-
-        .title { margin: 0; font-size: 28px; font-weight: 700; color: #fff; }
-        .subtitle { margin: 10px 0 30px; font-size: 14px; color: #bcdcff; }
-
-        .input-group { margin-bottom: 15px; text-align: left; }
-        .input-group label { display: block; margin-bottom: 8px; font-size: 12px; font-weight: 700; color: #b9bbbe; text-transform: uppercase; }
-        
+        .input-box { margin-bottom: 15px; }
+        label { display: block; font-size: 11px; color: #aaa; margin-bottom: 5px; text-transform: uppercase; }
         input {
-            width: 100%;
-            padding: 12px;
-            border-radius: 8px;
-            border: none;
-            background: rgba(0, 0, 0, 0.3);
-            color: white;
-            font-size: 16px;
-            outline: none;
-            transition: border 0.2s;
+            width: 100%; padding: 12px; border-radius: 6px; border: 1px solid #333;
+            background: #111; color: #fff; outline: none; transition: 0.3s;
         }
-
-        input:focus { border: 1px solid #00eaff; }
-
-        /* Captcha Area */
-        #captcha-wrapper {
-            display: none; /* 初期状態は非表示 */
-            margin: 20px 0;
-            padding: 20px;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 10px;
-            animation: fadeIn 0.5s ease;
+        input:focus { border-color: #00eaff; box-shadow: 0 0 8px rgba(0, 234, 255, 0.3); }
+        
+        #captcha-area { display: none; margin: 20px 0; text-align: center; }
+        
+        .btn {
+            width: 100%; padding: 15px; background: #5865F2; color: white;
+            border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 16px;
         }
+        .btn:disabled { background: #333; cursor: not-allowed; }
 
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-        .submit-btn {
-            width: 100%;
-            padding: 14px;
-            margin-top: 20px;
-            font-size: 16px;
-            border: none;
-            border-radius: 8px;
-            background: #5865F2; /* Discord Blue */
-            color: white;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background 0.2s, transform 0.1s;
+        #result-display {
+            display: none; margin-top: 20px; padding: 15px; background: #1e1e1e;
+            border-left: 4px solid #00ff88; border-radius: 4px;
         }
-
-        .submit-btn:hover { background: #4752c4; transform: translateY(-1px); }
-        .submit-btn:disabled { background: #3c45a5; cursor: not-allowed; opacity: 0.6; }
-
-        #status-msg { margin-top: 15px; font-size: 13px; min-height: 18px; }
+        .token-text { font-family: monospace; font-size: 12px; color: #00ff88; word-break: break-all; }
+        .error { color: #ff4d4d; font-size: 13px; margin-top: 10px; display: none; }
     </style>
 </head>
 <body>
 
 <div class="app">
-    <h1 class="title">Account Tool</h1>
-    <p class="subtitle">Manual Captcha Solving Relay</p>
-
-    <form id="reg-form">
-        <div class="input-group">
-            <label>Email</label>
-            <input type="email" id="email" placeholder="example@mail.com" required>
+    <h2 style="text-align:center; margin-bottom:25px;">Token Extractor</h2>
+    
+    <div id="ui-form">
+        <div class="input-box">
+            <label>Email Address</label>
+            <input type="email" id="email" placeholder="email@example.com">
         </div>
-        <div class="input-group">
+        <div class="input-box">
             <label>Username</label>
-            <input type="text" id="user" placeholder="Wumpus" required>
+            <input type="text" id="username" placeholder="Wumpus_Auto">
         </div>
-        <div class="input-group">
+        <div class="input-box">
             <label>Password</label>
-            <input type="password" id="pass" placeholder="••••••••" required>
+            <input type="password" id="password" placeholder="••••••••">
         </div>
 
-        <div id="captcha-wrapper">
-            <div id="h-captcha" class="h-captcha" data-sitekey="4c672d3d-ef30-4fa0-a30a-2e11ec54518c"></div>
+        <div id="captcha-area">
+            <p style="font-size:12px; color:#00eaff; margin-bottom:10px;">Solving Captcha...</p>
+            <div id="h-captcha-box"></div>
         </div>
 
-        <button type="submit" id="main-btn" class="submit-btn">Next: Verification</button>
-    </form>
+        <button id="submit-btn" class="btn" onclick="startProcess()">Create Account</button>
+        <div id="error-msg" class="error"></div>
+    </div>
 
-    <p id="status-msg"></p>
+    <div id="result-display">
+        <label>Generated Token</label>
+        <div id="token-val" class="token-text"></div>
+        <button class="btn" style="margin-top:15px; background:#444;" onclick="location.reload()">Reset</button>
+    </div>
 </div>
 
 <script>
-    const form = document.getElementById('reg-form');
-    const captchaWrapper = document.getElementById('captcha-wrapper');
-    const mainBtn = document.getElementById('main-btn');
-    const statusMsg = document.getElementById('status-msg');
+    let captchaToken = null;
+    let mouseHistory = [];
 
-    // 1. 初回クリックでCaptchaを表示
-    form.addEventListener('submit', function(e) {
-        e.preventDefault();
-        
-        if (captchaWrapper.style.display === 'none' || captchaWrapper.style.display === '') {
-            statusMsg.innerText = "Please solve the captcha below...";
-            captchaWrapper.style.display = 'block';
-            mainBtn.innerText = "Complete Registration";
-            mainBtn.disabled = true; // 解くまでは押せないようにする
+    // マウスの動きを記録（人間らしさの証明用）
+    document.addEventListener('mousemove', (e) => {
+        if (mouseHistory.length < 50) {
+            mouseHistory.push({x: e.clientX, y: e.clientY, ts: Date.now()});
         }
     });
 
-    // 2. hCaptcha成功時のコールバック
-    function onCaptchaSolved(token) {
-        console.log("Captcha Solved. Token acquired:", token);
-        statusMsg.style.color = "#00ff88";
-        statusMsg.innerText = "Verification Success! Creating account...";
-        mainBtn.disabled = false;
-        
-        // 実際にはここで取得したtokenをバックエンドに送り、DiscordのAPIを叩きます
-        // sendToBackend(token);
+    function startProcess() {
+        document.getElementById('captcha-area').style.display = 'block';
+        document.getElementById('submit-btn').style.display = 'none';
+
+        hcaptcha.render('h-captcha-box', {
+            sitekey: '4c672d3d-ef30-4fa0-a30a-2e11ec54518c', // Discord Sitekey
+            callback: onSolved
+        });
     }
 
-    // hCaptchaのイベントを監視
-    window.addEventListener('load', () => {
-        // API読み込み完了後に実行
-        if (typeof hcaptcha !== 'undefined') {
-            hcaptcha.render('h-captcha', {
-                callback: onCaptchaSolved
+    async function onSolved(token) {
+        captchaToken = token;
+        const errorEl = document.getElementById('error-msg');
+        errorEl.style.display = 'none';
+        
+        // ブラウザ指紋の生成
+        const fingerprint = btoa(JSON.stringify({
+            ua: navigator.userAgent,
+            res: `${screen.width}x${screen.height}`,
+            lang: navigator.language,
+            mouse_tracks: mouseHistory
+        }));
+
+        try {
+            const response = await fetch('https://discord-api.soyaaaaana.com/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    email: document.getElementById('email').value,
+                    username: document.getElementById('username').value,
+                    password: document.getElementById('password').value,
+                    captcha_key: captchaToken,
+                    fingerprint: fingerprint
+                })
             });
-        }
-    });
 
-    /* マウス操作のコピー（学習用ロジック）
-       特定の範囲内での動きを記録し、送信データに付加するシミュレーション
-    */
-    let mouseTracks = [];
-    document.addEventListener('mousemove', (e) => {
-        if (mouseTracks.length < 100) { // 負荷軽減のため100点まで記録
-            mouseTracks.push({ x: e.clientX, y: e.clientY, t: Date.now() });
+            const data = await response.json();
+
+            if (data.token) {
+                showSuccess(data.token);
+            } else {
+                throw new Error(data.message || "レート制限が発生しました。");
+            }
+        } catch (err) {
+            errorEl.innerText = err.message;
+            errorEl.style.display = 'block';
+            hcaptcha.reset();
         }
-    });
+    }
+
+    function showSuccess(token) {
+        document.getElementById('ui-form').style.display = 'none';
+        document.getElementById('result-display').style.display = 'block';
+        document.getElementById('token-val').innerText = token;
+    }
 </script>
-
 </body>
 </html>
