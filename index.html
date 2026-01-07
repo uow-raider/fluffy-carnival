@@ -2,87 +2,111 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>Discord Group ID Fetcher</title>
+    <title>Discord Group ID Extractor</title>
     <style>
-        body { font-family: sans-serif; padding: 20px; background: #36393f; color: white; }
-        .container { max-width: 600px; margin: 0 auto; background: #2f3136; padding: 20px; border-radius: 8px; }
-        input, button { width: 100%; padding: 10px; margin-top: 10px; border-radius: 4px; border: none; }
-        input { background: #40444b; color: white; }
-        button { background: #5865f2; color: white; cursor: pointer; font-weight: bold; }
+        body { font-family: 'Segoe UI', sans-serif; padding: 20px; background: #36393f; color: #dcddde; }
+        .container { max-width: 600px; margin: 0 auto; background: #2f3136; padding: 25px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+        h2 { color: #ffffff; text-align: center; margin-bottom: 20px; }
+        .input-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-size: 0.9em; color: #b9bbbe; }
+        input { width: 100%; padding: 12px; box-sizing: border-box; background: #40444b; color: white; border: 1px solid #202225; border-radius: 5px; }
+        button { width: 100%; padding: 12px; background: #5865f2; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; margin-top: 10px; transition: 0.2s; }
         button:hover { background: #4752c4; }
-        table { width: 100%; margin-top: 20px; border-collapse: collapse; }
-        th, td { border: 1px solid #4f545c; padding: 8px; text-align: left; }
-        th { background: #202225; }
-        .error { color: #ed4245; margin-top: 10px; }
+        button.copy-btn { background: #4e5058; }
+        button.copy-btn:hover { background: #686a73; }
+        #resultArea { width: 100%; height: 150px; margin-top: 20px; background: #232428; color: #3ba55c; border: 1px solid #4f545c; border-radius: 5px; padding: 10px; box-sizing: border-box; font-family: monospace; display: none; }
+        .error { color: #ed4245; margin-top: 10px; text-align: center; font-size: 0.9em; }
+        .success { color: #3ba55c; text-align: center; margin-top: 10px; }
     </style>
 </head>
 <body>
     <div class="container">
-        <h2>グループID取得ツール</h2>
-        <p style="font-size: 0.8em; color: #b9bbbe;">ユーザートークンを入力して「取得」を押してください。</p>
-        <input type="password" id="token" placeholder="Discord User Token">
-        <button onclick="fetchGroups()">グループ一覧を取得</button>
-        <div id="error" class="error"></div>
+        <h2>Group ID Fetcher</h2>
         
-        <table id="resultTable" style="display:none;">
-            <thead>
-                <tr>
-                    <th>グループ名</th>
-                    <th>チャンネルID</th>
-                </tr>
-            </thead>
-            <tbody id="resultBody"></tbody>
-        </table>
+        <div class="input-group">
+            <label>あなたのユーザートークン</label>
+            <input type="password" id="token" placeholder="mfa.xxxx...">
+        </div>
+
+        <div class="input-group">
+            <label>チェックするユーザーID（フレンド確認用）</label>
+            <input type="text" id="targetUserId" placeholder="123456789012345678">
+        </div>
+
+        <button onclick="startProcess()">フレンド確認 & グループID取得</button>
+        
+        <div id="status"></div>
+        
+        <textarea id="resultArea" readonly></textarea>
+        <button id="copyAllBtn" class="copy-btn" style="display:none;" onclick="copyAll()">全てのIDをコピー</button>
     </div>
 
     <script>
-        async function fetchGroups() {
+        async function startProcess() {
             const token = document.getElementById('token').value;
-            const errorDiv = document.getElementById('error');
-            const table = document.getElementById('resultTable');
-            const tbody = document.getElementById('resultBody');
-            
-            errorDiv.innerText = "";
-            tbody.innerHTML = "";
-            table.style.display = "none";
+            const targetUserId = document.getElementById('targetUserId').value;
+            const status = document.getElementById('status');
+            const resultArea = document.getElementById('resultArea');
+            const copyBtn = document.getElementById('copyAllBtn');
 
-            if (!token) {
-                errorDiv.innerText = "トークンを入力してください。";
+            status.innerHTML = "確認中...";
+            resultArea.style.display = "none";
+            copyBtn.style.display = "none";
+
+            if (!token || !targetUserId) {
+                status.innerHTML = "<div class='error'>トークンとユーザーIDを両方入力してください。</div>";
                 return;
             }
 
             try {
-                const response = await fetch("https://discord.com/api/v9/users/@me/channels", {
+                // 1. フレンドリストを取得してチェック
+                const relRes = await fetch("https://discord.com/api/v9/users/@me/relationships", {
                     headers: { "Authorization": token }
                 });
 
-                if (response.status === 401) {
-                    errorDiv.innerText = "エラー: トークンが無効です。";
+                if (relRes.status === 401) {
+                    status.innerHTML = "<div class='error'>トークンが無効です。</div>";
                     return;
                 }
 
-                const channels = await response.json();
-                const groups = channels.filter(c => c.type === 3); // type 3 = Group DM
+                const friends = await relRes.json();
+                const isFriend = friends.some(f => f.id === targetUserId && f.type === 1);
 
-                if (groups.length === 0) {
-                    errorDiv.innerText = "グループDMは見つかりませんでした。";
+                if (!isFriend) {
+                    status.innerHTML = "<div class='error'>指定されたユーザーはフレンドではありません。処理を中断しました。</div>";
                     return;
                 }
 
-                groups.forEach(group => {
-                    const row = tbody.insertRow();
-                    const nameCell = row.insertCell(0);
-                    const idCell = row.insertCell(1);
-                    
-                    nameCell.innerText = group.name || "（名前なし）";
-                    idCell.innerText = group.id;
+                // 2. グループIDを取得
+                const chanRes = await fetch("https://discord.com/api/v9/users/@me/channels", {
+                    headers: { "Authorization": token }
                 });
 
-                table.style.display = "table";
+                const channels = await chanRes.json();
+                const groupIds = channels
+                    .filter(c => c.type === 3)
+                    .map(c => c.id);
+
+                if (groupIds.length === 0) {
+                    status.innerHTML = "<div class='success'>フレンド確認済み。グループDMは見つかりませんでした。</div>";
+                } else {
+                    status.innerHTML = "<div class='success'>フレンド確認済み！グループIDを抽出しました。</div>";
+                    resultArea.value = groupIds.join("\n");
+                    resultArea.style.display = "block";
+                    copyBtn.style.display = "block";
+                }
+
             } catch (err) {
-                errorDiv.innerText = "通信エラーが発生しました。";
+                status.innerHTML = "<div class='error'>通信エラー。ブラウザのCORS制限を確認してください。</div>";
                 console.error(err);
             }
+        }
+
+        function copyAll() {
+            const resultArea = document.getElementById('resultArea');
+            navigator.clipboard.writeText(resultArea.value).then(() => {
+                alert("全てのグループIDをコピーしました。");
+            });
         }
     </script>
 </body>
