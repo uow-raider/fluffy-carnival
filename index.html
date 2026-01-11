@@ -23,12 +23,6 @@
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
     }
 
-    body.game-mode {
-      background: #1e293b;
-      padding: 0;
-      justify-content: flex-start;
-    }
-
     .container {
       width: 100%;
       max-width: 900px;
@@ -99,33 +93,16 @@
       transform: scale(1.05);
     }
 
-    .game-area.fullscreen {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      aspect-ratio: auto;
-      border-radius: 0;
-      border: none;
-      box-shadow: none;
-      z-index: 100;
-    }
-
-    .game-area.fullscreen .guide-text {
-      display: none;
-    }
-
-    .stats.hidden {
-      display: none;
-    }
-
-    .button-container.hidden {
-      display: none;
-    }
-
-    .footer.hidden {
-      display: none;
+    .game-area {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 3 / 2;
+      background: #475569;
+      border-radius: 0.5rem;
+      border: 4px solid white;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
+      overflow: hidden;
+      cursor: crosshair;
     }
 
     .guide-text {
@@ -239,19 +216,19 @@
       <button class="start-btn" id="startBtn">トレーニング開始</button>
     </div>
 
+    <div class="game-area" id="gameArea">
+      <div class="guide-text">✓ 青をタップして継続</div>
+      <div class="overlay" id="overlay">
+        <div class="overlay-text">トレーニング開始ボタンをタップ</div>
+      </div>
+    </div>
+
     <div class="footer">
       <p><strong>📌 ルール</strong></p>
       <p>青い円をタップ → 新しい円が追加</p>
       <p>間違えて背景をクリック → ミスカウント増加</p>
       <p style="margin-top: 1rem; color: #06b6d4;"><strong>50回成功するまでの時間を競おう！</strong></p>
       <div id="completionMessage"></div>
-    </div>
-  </div>
-
-  <div class="game-area" id="gameArea">
-    <div class="guide-text">✓ 青をタップして継続</div>
-    <div class="overlay" id="overlay">
-      <div class="overlay-text">トレーニング開始ボタンをタップ</div>
     </div>
   </div>
 
@@ -272,8 +249,7 @@
     const timeEl = document.getElementById('time');
     const completionMessageEl = document.getElementById('completionMessage');
 
-    // ゲーム開始
-    startBtn.addEventListener('click', () => {
+    startBtn.onclick = function() {
       score = 0;
       missCount = 0;
       completed = false;
@@ -285,21 +261,12 @@
       scoreEl.textContent = '0';
       missCountEl.textContent = '0';
       timeEl.textContent = '0.0';
-      
-      // 全画面モード有効化
-      document.body.classList.add('game-mode');
-      document.querySelector('.container').style.display = 'none';
-      gameArea.classList.add('fullscreen');
       overlay.style.display = 'none';
 
-      // 初期ボックスを追加
       addNewBox();
-
-      // タイマー開始
       updateTimer();
-    });
+    };
 
-    // タイマー更新
     function updateTimer() {
       if (!gameActive) return;
 
@@ -309,28 +276,30 @@
       animationFrameId = requestAnimationFrame(updateTimer);
     }
 
-    // 新しいボックスを追加
     function addNewBox() {
-      const x = Math.random() * 80 + 10;
-      const y = Math.random() * 80 + 10;
+      const gameWidth = gameArea.offsetWidth;
+      const gameHeight = gameArea.offsetHeight;
+      const circleRadius = 40; // 5rem = 80px, radius = 40px
+      
+      const x = Math.random() * (gameWidth - circleRadius * 2) + circleRadius;
+      const y = Math.random() * (gameHeight - circleRadius * 2) + circleRadius;
       const id = Math.random();
 
       const circle = document.createElement('button');
       circle.className = 'target-circle';
-      circle.style.left = x + '%';
-      circle.style.top = y + '%';
+      circle.style.left = x + 'px';
+      circle.style.top = y + 'px';
       circle.style.transform = 'translate(-50%, -50%)';
 
-      circle.addEventListener('click', function(e) {
+      circle.onclick = function(e) {
         e.stopPropagation();
         handleBoxClick(id, circle);
-      });
+      };
 
       gameArea.appendChild(circle);
       boxes.push({ id, element: circle });
     }
 
-    // ボックスをタップ
     function handleBoxClick(id, element) {
       if (!gameActive) return;
 
@@ -347,14 +316,12 @@
       addNewBox();
     }
 
-    // 背景をクリック（ミス）
-    gameArea.addEventListener('click', (e) => {
+    gameArea.onclick = function(e) {
       if (!gameActive || e.target !== gameArea) return;
       missCount++;
       missCountEl.textContent = missCount;
-    });
+    };
 
-    // ゲーム終了
     function endGame() {
       gameActive = false;
       completed = true;
@@ -363,22 +330,13 @@
       const finalTime = (performance.now() - startTime) / 1000;
       timeEl.textContent = finalTime.toFixed(2);
 
-      // すべてのボックスを削除
       boxes.forEach(b => b.element.remove());
       boxes = [];
 
-      // 完了メッセージを表示
-      completionMessageEl.innerHTML = `
-        <div class="completion-message">
-          <p>🎉 完了！</p>
-          <p>クリア時間: <span class="detail">${finalTime.toFixed(2)}秒</span></p>
-          <p>ミス数: <span class="detail">${missCount}</span></p>
-        </div>
-      `;
+      completionMessageEl.innerHTML = '<div class="completion-message"><p>🎉 完了！<\/p><p>クリア時間: <span class="detail">' + finalTime.toFixed(2) + '秒<\/span><\/p><p>ミス数: <span class="detail">' + missCount + '<\/span><\/p><\/div>';
 
       overlay.style.display = 'flex';
       overlay.innerHTML = '<div class="overlay-text">完了！もう一度挑戦しますか？<\/div>';
-      startBtn.style.display = 'inline-block';
       startBtn.textContent = 'もう一度';
     }
   </script>
