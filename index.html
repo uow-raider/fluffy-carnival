@@ -1,143 +1,359 @@
-import React, { useState, useEffect } from 'react';
-
-export default function AimTrainer() {
-  const [score, setScore] = useState(0);
-  const [gameActive, setGameActive] = useState(false);
-  const [boxes, setBoxes] = useState([]);
-  const [missCount, setMissCount] = useState(0);
-  const [startTime, setStartTime] = useState(null);
-  const [elapsedTime, setElapsedTime] = useState(0);
-  const [completed, setCompleted] = useState(false);
-
-  const targetColor = 'bg-blue-500';
-
-  // ゲーム開始
-  const startGame = () => {
-    setScore(0);
-    setMissCount(0);
-    setGameActive(true);
-    setCompleted(false);
-    setElapsedTime(0);
-    setStartTime(Date.now());
-    setBoxes([{
-      id: Math.random(),
-      x: Math.random() * 80,
-      y: Math.random() * 80,
-    }]);
-  };
-
-  // タイマー更新
-  useEffect(() => {
-    if (!gameActive || !startTime) return;
-
-    const timer = setInterval(() => {
-      const elapsed = Math.floor((Date.now() - startTime) / 1000);
-      setElapsedTime(elapsed);
-    }, 100);
-
-    return () => clearInterval(timer);
-  }, [gameActive, startTime]);
-
-  // ボックスをタップ - 成功時
-  const handleBoxClick = (id) => {
-    const newScore = score + 1;
-    setScore(newScore);
-    setBoxes(prev => prev.filter(box => box.id !== id));
-    
-    // 50回成功したらゲーム終了
-    if (newScore >= 50) {
-      setGameActive(false);
-      setCompleted(true);
-      return;
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🎯 エイムトレーナー</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
     }
-    
-    // 新しいボックスを追加
-    const newBox = {
-      id: Math.random(),
-      x: Math.random() * 80,
-      y: Math.random() * 80,
-    };
-    setBoxes(prev => [...prev, newBox]);
-  };
 
-  // 背景をクリック - ミス時
-  const handleBackgroundClick = (e) => {
-    if (!gameActive || e.target !== e.currentTarget) return;
-    setMissCount(prev => prev + 1);
-  };
+    body {
+      width: 100%;
+      height: 100vh;
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+    }
 
-  return (
-    <div className="w-full h-screen bg-gradient-to-br from-slate-900 to-slate-800 flex flex-col items-center justify-center p-4">
-      <div className="text-white text-center mb-8">
-        <h1 className="text-4xl font-bold mb-4">🎯 エイムトレーナー</h1>
-        <div className="flex gap-8 justify-center text-2xl font-bold mb-6">
-          <div className="bg-blue-600 px-6 py-3 rounded-lg">
-            スコア: <span className="text-yellow-300">{score}</span>/50
-          </div>
-          <div className="bg-red-600 px-6 py-3 rounded-lg">
-            ミス: <span className="text-yellow-300">{missCount}</span>
-          </div>
-          <div className="bg-purple-600 px-6 py-3 rounded-lg">
-            時間: <span className="text-yellow-300">{elapsedTime.toFixed(1)}秒</span>
-          </div>
+    .container {
+      width: 100%;
+      max-width: 900px;
+    }
+
+    .header {
+      color: white;
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    .header h1 {
+      font-size: 2.25rem;
+      font-weight: bold;
+      margin-bottom: 1rem;
+    }
+
+    .stats {
+      display: flex;
+      gap: 2rem;
+      justify-content: center;
+      font-size: 1.5rem;
+      font-weight: bold;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+    }
+
+    .stat-box {
+      padding: 0.75rem 1.5rem;
+      border-radius: 0.5rem;
+    }
+
+    .stat-score {
+      background: #1e40af;
+    }
+
+    .stat-miss {
+      background: #991b1b;
+    }
+
+    .stat-time {
+      background: #6b21a8;
+    }
+
+    .stat-value {
+      color: #fcd34d;
+    }
+
+    .button-container {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    .start-btn {
+      padding: 1rem 2rem;
+      font-size: 1.25rem;
+      font-weight: bold;
+      color: white;
+      background: linear-gradient(to right, #06b6d4, #3b82f6);
+      border: none;
+      border-radius: 0.5rem;
+      cursor: pointer;
+      transition: transform 0.2s, background 0.2s;
+    }
+
+    .start-btn:hover {
+      background: linear-gradient(to right, #0891b2, #1d4ed8);
+      transform: scale(1.05);
+    }
+
+    .game-area {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 3 / 2;
+      background: #475569;
+      border-radius: 0.5rem;
+      border: 4px solid white;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
+      overflow: hidden;
+      cursor: crosshair;
+    }
+
+    .guide-text {
+      position: absolute;
+      bottom: 1rem;
+      right: 1rem;
+      color: white;
+      font-weight: bold;
+      font-size: 0.875rem;
+      background: #1e40af;
+      padding: 0.5rem 0.75rem;
+      border-radius: 0.25rem;
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    .target-circle {
+      position: absolute;
+      width: 5rem;
+      height: 5rem;
+      background: #3b82f6;
+      border-radius: 50%;
+      cursor: pointer;
+      border: 4px solid #93c5fd;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+      transition: transform 0.1s;
+    }
+
+    .target-circle:hover {
+      transform: scale(1.1);
+    }
+
+    .target-circle:active {
+      transform: scale(0.95);
+    }
+
+    .overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      border-radius: 0.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 20;
+    }
+
+    .overlay-text {
+      color: white;
+      text-align: center;
+      font-size: 1.5rem;
+      font-weight: bold;
+    }
+
+    .footer {
+      color: white;
+      text-align: center;
+      margin-top: 2rem;
+      max-width: 800px;
+    }
+
+    .footer p {
+      font-size: 1rem;
+      margin: 0.5rem 0;
+    }
+
+    .completion-message {
+      margin-top: 1.5rem;
+      padding: 1rem;
+      background: #eab308;
+      border-radius: 0.5rem;
+    }
+
+    .completion-message p {
+      color: #1e293b;
+      margin: 0.5rem 0;
+    }
+
+    .completion-message p:first-child {
+      font-size: 1.5rem;
+      font-weight: bold;
+    }
+
+    .completion-message .detail {
+      font-size: 1.125rem;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🎯 エイムトレーナー</h1>
+      <div class="stats">
+        <div class="stat-box stat-score">
+          スコア: <span class="stat-value" id="score">0</span>/50
+        </div>
+        <div class="stat-box stat-miss">
+          ミス: <span class="stat-value" id="missCount">0</span>
+        </div>
+        <div class="stat-box stat-time">
+          時間: <span class="stat-value" id="time">0.0</span>秒
         </div>
       </div>
+    </div>
 
-      {!gameActive && (
-        <button
-          onClick={startGame}
-          className="mb-8 px-8 py-4 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white font-bold text-xl rounded-lg transition transform hover:scale-105"
-        >
-          トレーニング開始
-        </button>
-      )}
+    <div class="button-container">
+      <button class="start-btn" id="startBtn">トレーニング開始</button>
+    </div>
 
-      <div 
-        onClick={handleBackgroundClick}
-        className="relative w-full max-w-3xl h-96 bg-slate-700 rounded-lg overflow-hidden border-4 border-white shadow-2xl cursor-crosshair"
-      >
-        {gameActive && (
-          <div className="absolute bottom-4 right-4 text-white font-bold text-sm bg-blue-600 px-3 py-2 rounded z-10 pointer-events-none">
-            ✓ 青をタップして継続
-          </div>
-        )}
-
-        {boxes.map(box => (
-          <button
-            key={box.id}
-            onClick={() => handleBoxClick(box.id)}
-            className={`absolute w-20 h-20 ${targetColor} rounded-full cursor-pointer transform transition hover:scale-110 active:scale-95 shadow-lg border-4 border-blue-300`}
-            style={{
-              left: `${box.x}%`,
-              top: `${box.y}%`,
-              transform: 'translate(-50%, -50%)',
-            }} onContextMenu={(e) => e.preventDefault()}
-          />
-        ))}
-
-        {!gameActive && score === 0 && (
-          <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-lg">
-            <div className="text-center">
-              <p className="text-white text-2xl font-bold mb-4">トレーニング開始ボタンをタップ</p>
-              <p className="text-white text-lg">青い円をひたすらタップして精度を鍛えよう！</p>
-            </div>
-          </div>
-        )}
-      </div>
-
-      <div className="text-white text-center mt-8 max-w-2xl">
-        <p className="text-lg font-semibold mb-2">📌 ルール</p>
-        <p className="text-base">青い円をタップ → 新しい円が追加</p>
-        <p className="text-base">間違えて背景をクリック → ミスカウント増加</p>
-        <p className="text-base mt-4 text-cyan-300">50回成功するまでの時間を競おう！</p>
-        {completed && (
-          <div className="mt-6 p-4 bg-yellow-500 rounded-lg">
-            <p className="text-2xl font-bold">🎉 完了！</p>
-            <p className="text-xl mt-2">クリア時間: <span className="text-blue-900 font-bold">{elapsedTime.toFixed(1)}秒</span></p>
-            <p className="text-lg mt-2">ミス数: <span className="text-blue-900 font-bold">{missCount}</span></p>
-          </div>
-        )}
+    <div class="game-area" id="gameArea">
+      <div class="guide-text">✓ 青をタップして継続</div>
+      <div class="overlay" id="overlay">
+        <div class="overlay-text">トレーニング開始ボタンをタップ</div>
       </div>
     </div>
-  );
-}
+
+    <div class="footer">
+      <p><strong>📌 ルール</strong></p>
+      <p>青い円をタップ → 新しい円が追加</p>
+      <p>間違えて背景をクリック → ミスカウント増加</p>
+      <p style="margin-top: 1rem; color: #06b6d4;"><strong>50回成功するまでの時間を競おう！</strong></p>
+      <div id="completionMessage"></div>
+    </div>
+  </div>
+
+  <script>
+    let score = 0;
+    let missCount = 0;
+    let gameActive = false;
+    let startTime = null;
+    let boxes = [];
+    let completed = false;
+    let animationFrameId = null;
+
+    const gameArea = document.getElementById('gameArea');
+    const startBtn = document.getElementById('startBtn');
+    const overlay = document.getElementById('overlay');
+    const scoreEl = document.getElementById('score');
+    const missCountEl = document.getElementById('missCount');
+    const timeEl = document.getElementById('time');
+    const completionMessageEl = document.getElementById('completionMessage');
+
+    // ゲーム開始
+    startBtn.addEventListener('click', () => {
+      score = 0;
+      missCount = 0;
+      completed = false;
+      gameActive = true;
+      startTime = performance.now();
+      boxes = [];
+      completionMessageEl.innerHTML = '';
+      
+      scoreEl.textContent = '0';
+      missCountEl.textContent = '0';
+      timeEl.textContent = '0.0';
+      overlay.style.display = 'none';
+      startBtn.style.display = 'none';
+
+      // 初期ボックスを追加
+      addNewBox();
+
+      // タイマー開始
+      updateTimer();
+    });
+
+    // タイマー更新
+    function updateTimer() {
+      if (!gameActive) return;
+
+      const elapsed = (performance.now() - startTime) / 1000;
+      timeEl.textContent = elapsed.toFixed(2);
+
+      animationFrameId = requestAnimationFrame(updateTimer);
+    }
+
+    // 新しいボックスを追加
+    function addNewBox() {
+      const x = Math.random() * 90;
+      const y = Math.random() * 90;
+      const id = Math.random();
+
+      const circle = document.createElement('button');
+      circle.className = 'target-circle';
+      circle.style.left = x + '%';
+      circle.style.top = y + '%';
+      circle.style.transform = 'translate(-50%, -50%)';
+
+      circle.addEventListener('click', function(e) {
+        e.stopPropagation();
+        handleBoxClick(id, circle);
+      });
+
+      gameArea.appendChild(circle);
+      boxes.push({ id, element: circle });
+    }
+
+    // ボックスをタップ
+    function handleBoxClick(id, element) {
+      if (!gameActive) return;
+
+      score++;
+      scoreEl.textContent = score;
+      element.remove();
+      boxes = boxes.filter(b => b.id !== id);
+
+      if (score >= 50) {
+        endGame();
+        return;
+      }
+
+      addNewBox();
+    }
+
+    // 背景をクリック（ミス）
+    gameArea.addEventListener('click', (e) => {
+      if (!gameActive || e.target !== gameArea) return;
+      missCount++;
+      missCountEl.textContent = missCount;
+    });
+
+    // ゲーム終了
+    function endGame() {
+      gameActive = false;
+      completed = true;
+      cancelAnimationFrame(animationFrameId);
+
+      const finalTime = (performance.now() - startTime) / 1000;
+      timeEl.textContent = finalTime.toFixed(2);
+
+      // すべてのボックスを削除
+      boxes.forEach(b => b.element.remove());
+      boxes = [];
+
+      // 完了メッセージを表示
+      completionMessageEl.innerHTML = `
+        <div class="completion-message">
+          <p>🎉 完了！</p>
+          <p>クリア時間: <span class="detail">${finalTime.toFixed(2)}秒</span></p>
+          <p>ミス数: <span class="detail">${missCount}</span></p>
+        </div>
+      `;
+
+      overlay.style.display = 'flex';
+      overlay.innerHTML = '<div class="overlay-text">完了！もう一度挑戦しますか？<\/div>';
+      startBtn.style.display = 'inline-block';
+      startBtn.textContent = 'もう一度';
+    }
+  </script>
+</body>
+</html>
