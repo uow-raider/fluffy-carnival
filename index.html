@@ -198,6 +198,7 @@
       <div class="overlay" id="overlay">
         <div class="overlay-text">トレーニング開始ボタンをタップ</div>
       </div>
+      <div id="ballsContainer"></div>
     </div>
 
     <div class="footer">
@@ -225,6 +226,7 @@
     const missCountEl = document.getElementById('missCount');
     const timeEl = document.getElementById('time');
     const completionMessageEl = document.getElementById('completionMessage');
+    const ballsContainer = document.getElementById('ballsContainer');
 
     startBtn.onclick = function() {
       score = 0;
@@ -277,7 +279,7 @@
         handleBoxClick(id, circle);
       };
 
-      gameArea.appendChild(circle);
+      ballsContainer.appendChild(circle);
       boxes.push({ id, element: circle });
     }
 
