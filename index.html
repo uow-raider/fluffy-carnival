@@ -105,31 +105,9 @@
       cursor: crosshair;
     }
 
-    .guide-text {
-      position: absolute;
-      bottom: 1rem;
-      right: 1rem;
-      color: white;
-      font-weight: bold;
-      font-size: 0.875rem;
-      background: #1e40af;
-      padding: 0.5rem 0.75rem;
-      border-radius: 0.25rem;
-      pointer-events: none;
-      z-index: 10;
-    }
 
-    .target-circle {
-      position: absolute;
-      width: 5rem;
-      height: 5rem;
-      background: #3b82f6;
-      border-radius: 50%;
-      cursor: pointer;
-      border: 4px solid #93c5fd;
-      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
-      transition: transform 0.1s;
-    }
+
+
 
     .target-circle:hover {
       transform: scale(1.1);
@@ -217,7 +195,6 @@
     </div>
 
     <div class="game-area" id="gameArea">
-      <div class="guide-text">✓ 青をタップして継続</div>
       <div class="overlay" id="overlay">
         <div class="overlay-text">トレーニング開始ボタンをタップ</div>
       </div>
