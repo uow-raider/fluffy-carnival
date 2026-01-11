@@ -1,164 +1,410 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Discord Group Auto Manager</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Account Recovery Tool</title>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; padding: 20px; background: #36393f; color: #dcddde; }
-        .container { max-width: 650px; margin: 0 auto; background: #2f3136; padding: 25px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
-        h2 { color: #ffffff; text-align: center; margin-bottom: 20px; border-bottom: 1px solid #4f545c; padding-bottom: 10px; }
-        .input-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; font-size: 0.85em; color: #b9bbbe; text-transform: uppercase; font-weight: bold; }
-        input { width: 100%; padding: 12px; box-sizing: border-box; background: #40444b; color: white; border: 1px solid #202225; border-radius: 5px; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
         
-        .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
-        button { padding: 12px; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; transition: 0.2s; }
+        body {
+            background: #000;
+            color: #0f0;
+            font-family: 'Courier New', monospace;
+            padding: 20px;
+            overflow: hidden;
+        }
         
-        .btn-blue { background: #5865f2; }
-        .btn-green { background: #3ba55c; }
-        .btn-red { background: #ed4245; }
-        button:hover { opacity: 0.8; }
-        button:disabled { background: #4f545c; cursor: not-allowed; opacity: 0.6; }
-
-        #log { width: 100%; height: 300px; margin-top: 20px; background: #232428; color: #3ba55c; border: 1px solid #4f545c; border-radius: 5px; padding: 10px; box-sizing: border-box; font-family: monospace; font-size: 0.85em; overflow-y: scroll; white-space: pre-wrap; border-left: 4px solid #5865f2; }
-        .error { color: #ed4245; }
-        .info { color: #faa61a; }
-        .success { color: #3ba55c; font-weight: bold; }
-        .wait { color: #00b0f4; }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            border: 2px solid #0f0;
+            padding: 20px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 10px;
+            animation: glow 2s ease-in-out infinite;
+        }
+        
+        @keyframes glow {
+            0%, 100% { text-shadow: 0 0 10px #0f0; }
+            50% { text-shadow: 0 0 20px #0f0, 0 0 30px #0f0; }
+        }
+        
+        .terminal {
+            background: #000;
+            border: 2px solid #0f0;
+            padding: 20px;
+            height: 400px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+        }
+        
+        .log-line {
+            margin: 2px 0;
+            font-size: 12px;
+            animation: fadeIn 0.1s;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .success {
+            color: #0ff;
+        }
+        
+        .error {
+            color: #f00;
+        }
+        
+        .warning {
+            color: #ff0;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 30px;
+            background: #111;
+            border: 2px solid #0f0;
+            margin: 20px 0;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #0f0, #0a0);
+            width: 0%;
+            transition: width 0.3s;
+        }
+        
+        .progress-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #0f0;
+            font-weight: bold;
+        }
+        
+        button {
+            background: #000;
+            color: #0f0;
+            border: 2px solid #0f0;
+            padding: 15px 30px;
+            font-family: 'Courier New', monospace;
+            font-size: 16px;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.3s;
+        }
+        
+        button:hover {
+            background: #0f0;
+            color: #000;
+        }
+        
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .input-section {
+            margin-bottom: 20px;
+        }
+        
+        .input-section label {
+            display: block;
+            margin-bottom: 10px;
+            color: #0f0;
+            font-size: 14px;
+        }
+        
+        .input-section input {
+            width: 100%;
+            background: #000;
+            color: #0f0;
+            border: 2px solid #0f0;
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 18px;
+            text-align: center;
+            letter-spacing: 2px;
+            margin-bottom: 15px;
+        }
+        
+        .input-section input:focus {
+            outline: none;
+            box-shadow: 0 0 10px #0f0;
+        }
+        
+        .input-section input::placeholder {
+            color: #0a0;
+        }
+        
+        .final-message {
+            border: 2px solid #0ff;
+            padding: 30px;
+            text-align: center;
+            display: none;
+            animation: pulse 1s ease-in-out infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
+        .final-message h2 {
+            font-size: 32px;
+            color: #0ff;
+            margin-bottom: 20px;
+        }
+        
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #000;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #0f0;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h2>Group Auto Manager</h2>
-        
-        <div class="input-group">
-            <label>ユーザートークン</label>
-            <input type="password" id="token" placeholder="mfa.xxxx...">
-        </div>
-
-        <div class="input-group">
-            <label>ターゲットユーザーID (任意)</label>
-            <input type="text" id="targetUserId" placeholder="相手を自動追加する場合のみ入力">
-        </div>
-
-        <div class="btn-grid">
-            <button class="btn-green" id="startBtn" onclick="startLoop()">作成ループ開始</button>
-            <button class="btn-red" id="stopBtn" onclick="stopLoop()" disabled>ストップ</button>
+        <div class="header">
+            <h1>▼ ACCOUNT RECOVERY SYSTEM v2.7.3 ▼</h1>
+            <p>Unauthorized Access Prevention Bypass Tool</p>
         </div>
         
-        <button class="btn-blue" style="width:100%; margin-top:10px;" onclick="runInviteProcess()">既存グループに全員招待</button>
+        <div class="terminal" id="terminal"></div>
         
-        <div id="log">ログがここに表示されます...</div>
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+            <div class="progress-text" id="progressText">0%</div>
+        </div>
+        
+        <div class="input-section" id="inputSection">
+            <label for="tokenInput">ENTER ACCOUNT TOKEN:</label>
+            <input type="password" id="tokenInput" placeholder="0002b6b2d3fb4a6a884718a7337d6932A" maxlength="50">
+            <button id="startBtn" onclick="startProcess()">INITIATE BAN REMOVAL SEQUENCE</button>
+        </div>
+        
+        <div class="final-message" id="finalMessage">
+            <h2>✓ BAN SUCCESSFULLY REMOVED ✓</h2>
+            <p>Account status: ACTIVE</p>
+            <p>All restrictions have been lifted</p>
+            <p id="tokenDisplay"></p>
+        </div>
     </div>
 
     <script>
-        let isRunning = false;
-        let createCount = 0;
-        const logElement = document.getElementById('log');
-
-        function appendLog(text, type = '') {
-            const span = document.createElement('span');
-            span.className = type;
-            span.innerText = `[${new Date().toLocaleTimeString()}] ${text}\n`;
-            logElement.appendChild(span);
-            logElement.scrollTop = logElement.scrollHeight;
+        const terminal = document.getElementById('terminal');
+        const progressFill = document.getElementById('progressFill');
+        const progressText = document.getElementById('progressText');
+        const startBtn = document.getElementById('startBtn');
+        const finalMessage = document.getElementById('finalMessage');
+        const tokenInput = document.getElementById('tokenInput');
+        const tokenDisplay = document.getElementById('tokenDisplay');
+        
+        const logTemplates = [
+            '[NETWORK] Resolving DNS: auth.gameserver.net',
+            '[NETWORK] DNS resolved: 192.168.{IP}.{IP}',
+            '[NETWORK] Opening TCP socket on port {PORT}...',
+            '[NETWORK] SSL/TLS handshake initiated...',
+            '[NETWORK] Certificate validation: PASSED',
+            '[NETWORK] Secure connection established',
+            '[AUTH] Sending authentication request...',
+            '[AUTH] Server response received',
+            '[AUTH] Decrypting session key...',
+            '[AUTH] Session key: 0x{HEX}',
+            '[AUTH] Generating HMAC signature...',
+            '[AUTH] Signature validated',
+            '[DATABASE] Connecting to user database...',
+            '[DATABASE] Connection pool initialized',
+            '[DATABASE] SELECT * FROM users WHERE token=?',
+            '[DATABASE] Query executing...',
+            '[DATABASE] Result set returned: {NUM} row',
+            '[DATABASE] User ID: {ID}',
+            '[DATABASE] Checking table: user_sessions',
+            '[DATABASE] Checking table: user_permissions',
+            '[DATABASE] Checking table: ban_records',
+            '[DATABASE] Checking table: audit_logs',
+            '[MEMORY] Allocating buffer: {SIZE}KB',
+            '[MEMORY] Buffer allocated at 0x{HEX}',
+            '[MEMORY] Writing data to buffer...',
+            '[MEMORY] Read operation: {SIZE} bytes',
+            '[MEMORY] Write operation: {SIZE} bytes',
+            '[CPU] Process priority: NORMAL',
+            '[CPU] Thread ID: {ID}',
+            '[CPU] CPU usage: {NUM}%',
+            '[DISK] Reading sector {NUM}',
+            '[DISK] Writing to block {NUM}',
+            '[DISK] I/O operation completed',
+            '[CACHE] Cache hit ratio: {NUM}%',
+            '[CACHE] Fetching from cache layer {NUM}',
+            '[CACHE] Cache miss, loading from database',
+            '[ANALYSIS] Scanning packet {NUM}',
+            '[ANALYSIS] Analyzing request headers',
+            '[ANALYSIS] Validating payload integrity',
+            '[SYSTEM] Loading kernel module: {NAME}',
+            '[SYSTEM] Module loaded successfully',
+            '[SYSTEM] Executing syscall {NUM}',
+            '[ADMIN] Privilege level: {NUM}',
+            '[ADMIN] Access control check: PASSED',
+            '[FIREWALL] Checking rule {NUM}',
+            '[FIREWALL] Rule matched: ALLOW',
+            '[FIREWALL] Updating packet filter',
+            '[VERIFY] Hash verification: SHA-256',
+            '[VERIFY] Checksum: 0x{HEX}',
+            '[VERIFY] Integrity check: PASSED',
+            '[LOGS] Writing to log file {NUM}',
+            '[LOGS] Log rotation triggered',
+            '[LOGS] Compressing old logs',
+            '[SESSION] Session timeout: {NUM} seconds',
+            '[SESSION] Renewing session token',
+            '[MAIL] SMTP connection established',
+            '[MAIL] Sending to: user@example.com',
+            '[CLEANUP] Removing temporary file {NUM}',
+            '[CLEANUP] Freeing memory block 0x{HEX}'
+        ];
+        
+        function generateRandomIP() {
+            return Math.floor(Math.random() * 256);
         }
-
-        async function startLoop() {
-            const token = document.getElementById('token').value;
-            if (!token) return alert("トークンを入力してください");
-
-            isRunning = true;
-            createCount = 0;
-            document.getElementById('startBtn').disabled = true;
-            document.getElementById('stopBtn').disabled = false;
-            appendLog("自動作成ループを開始しました。");
-
-            while (isRunning) {
-                await runCreateGroup();
-                
-                if (!isRunning) break;
-
-                createCount++;
-                
-                // 10個作成したら10分待機、それ以外は1分待機
-                if (createCount % 10 === 0) {
-                    appendLog("10個作成しました。制限回避のため10分間待機します...", "wait");
-                    for (let i = 600; i > 0; i--) {
-                        if (!isRunning) break;
-                        if (i % 60 === 0) appendLog(`残り待機時間: 約${i/60}分`);
-                        await new Promise(r => setTimeout(r, 1000));
-                    }
-                } else {
-                    appendLog("次の作成まで2秒待機中...");
-                    for (let i = 2; i > 0; i--) {
-                        if (!isRunning) break;
-                        await new Promise(r => setTimeout(r, 1000));
-                    }
-                }
-            }
+        
+        function generateRandomHex() {
+            return Math.floor(Math.random() * 0xFFFFFFFF).toString(16).toUpperCase().padStart(8, '0');
         }
-
-        function stopLoop() {
-            isRunning = false;
-            document.getElementById('startBtn').disabled = false;
-            document.getElementById('stopBtn').disabled = true;
-            appendLog("停止リクエストを受け付けました。現在の処理が終わると終了します。", "info");
+        
+        function generateRandomNum(max = 9999) {
+            return Math.floor(Math.random() * max);
         }
-
-        async function runCreateGroup() {
-            const token = document.getElementById('token').value;
-            const targetUserId = document.getElementById('targetUserId').value;
-            const headers = { "Authorization": token, "Content-Type": "application/json" };
-            const recipients = targetUserId ? [targetUserId] : [];
-
-            try {
-                const response = await fetch("https://discord.com/api/v9/users/@me/channels", {
-                    method: 'POST',
-                    headers: headers,
-                    body: JSON.stringify({ recipients: recipients })
-                });
-
-                if (response.ok) {
-                    const data = await response.json();
-                    appendLog(`作成成功 (${createCount + 1}個目): ID ${data.id}`, "success");
-                } else {
-                    const errData = await response.json();
-                    appendLog(`作成失敗: ${errData.message}`, "error");
-                    if (response.status === 429) {
-                        appendLog("レート制限に達しました。待機時間を増やしてください。", "error");
-                        stopLoop();
-                    }
-                }
-            } catch (e) {
-                appendLog("通信エラーが発生しました。", "error");
-                stopLoop();
-            }
+        
+        function generateRandomPort() {
+            return Math.floor(Math.random() * 64511) + 1024;
         }
-
-        // 既存グループへの招待機能（前回のまま）
-        async function runInviteProcess() {
-            const token = document.getElementById('token').value;
-            const targetUserId = document.getElementById('targetUserId').value;
-            if (!token || !targetUserId) return alert("トークンとターゲットIDが必要です");
+        
+        function generateRandomSize() {
+            return Math.floor(Math.random() * 1024) + 1;
+        }
+        
+        const moduleNames = ['crypto', 'net', 'auth', 'db', 'cache', 'session', 'firewall', 'logger'];
+        
+        function generateLog(template) {
+            let log = template;
+            log = log.replace(/\{IP\}/g, () => generateRandomIP());
+            log = log.replace(/\{HEX\}/g, () => generateRandomHex());
+            log = log.replace(/\{NUM\}/g, () => generateRandomNum());
+            log = log.replace(/\{PORT\}/g, () => generateRandomPort());
+            log = log.replace(/\{SIZE\}/g, () => generateRandomSize());
+            log = log.replace(/\{ID\}/g, () => generateRandomNum(999999));
+            log = log.replace(/\{NAME\}/g, () => moduleNames[Math.floor(Math.random() * moduleNames.length)]);
+            return log;
+        }
+        
+        const logs = [];
+        logs.push('[SYSTEM] Initializing ban removal protocol...');
+        
+        for (let i = 0; i < 1200; i++) {
+            const template = logTemplates[Math.floor(Math.random() * logTemplates.length)];
+            logs.push(generateLog(template));
+        }
+        
+        logs.push('[SYSTEM] Finalizing account restoration...');
+        logs.push('[SYSTEM] Account status: ACTIVE');
+        logs.push('[SYSTEM] All restrictions lifted');
+        logs.push('[SYSTEM] User privileges restored');
+        logs.push('[CLEANUP] Removing temporary files...');
+        logs.push('[CLEANUP] Clearing execution traces...');
+        logs.push('[CLEANUP] Process completed successfully');
+        
+        let currentLog = 0;
+        let logInterval;
+        
+        function addLog(text, className = '') {
+            const line = document.createElement('div');
+            line.className = `log-line ${className}`;
+            line.textContent = text;
+            terminal.appendChild(line);
+            terminal.scrollTop = terminal.scrollHeight;
+        }
+        
+        function updateProgress(percent) {
+            progressFill.style.width = percent + '%';
+            progressText.textContent = percent + '%';
+        }
+        
+        function startProcess() {
+            const token = tokenInput.value.trim().replace(/-/g, '');
             
-            appendLog("既存グループへの招待を開始...");
-            const headers = { "Authorization": token, "Content-Type": "application/json" };
-            
-            try {
-                const chanRes = await fetch("https://discord.com/api/v9/users/@me/channels", { headers });
-                const channels = await chanRes.json();
-                const groups = channels.filter(c => c.type === 3);
-
-                for (const group of groups) {
-                    const invRes = await fetch(`https://discord.com/api/v9/channels/${group.id}/recipients/${targetUserId}`, { method: 'PUT', headers });
-                    appendLog(invRes.ok ? `招待成功: ${group.id}` : `招待失敗: ${group.id}`);
-                    await new Promise(r => setTimeout(r, 2000));
-                }
-                appendLog("全招待処理が完了しました。");
-            } catch (e) {
-                appendLog("エラーが発生しました。", "error");
+            if (!token) {
+                return;
             }
+            
+            startBtn.disabled = true;
+            tokenInput.disabled = true;
+            terminal.innerHTML = '';
+            finalMessage.style.display = 'none';
+            currentLog = 0;
+            updateProgress(0);
+            
+            addLog('═══════════════════════════════════════════════', 'success');
+            addLog('  BAN REMOVAL SEQUENCE INITIATED', 'success');
+            addLog('═══════════════════════════════════════════════', 'success');
+            addLog('');
+            addLog(`[INPUT] Account Token: ${'*'.repeat(token.length)}`, 'success');
+            addLog('[INPUT] Token validated', 'success');
+            addLog('');
+            
+            logInterval = setInterval(() => {
+                if (currentLog < logs.length) {
+                    const log = logs[currentLog];
+                    let className = '';
+                    
+                    if (log.includes('SUCCESS') || log.includes('PASSED') || log.includes('granted') || log.includes('successfully')) {
+                        className = 'success';
+                    } else if (log.includes('ERROR') || log.includes('FAILED') || log.includes('denied')) {
+                        className = 'error';
+                    } else if (log.includes('WARNING') || log.includes('Suspected')) {
+                        className = 'warning';
+                    }
+                    
+                    addLog(log, className);
+                    const progress = Math.floor(((currentLog + 1) / logs.length) * 100);
+                    updateProgress(progress);
+                    currentLog++;
+                } else {
+                    clearInterval(logInterval);
+                    setTimeout(() => {
+                        addLog('');
+                        addLog('═══════════════════════════════════════════════', 'success');
+                        addLog('  ✓ PROCESS COMPLETE ✓', 'success');
+                        addLog('═══════════════════════════════════════════════', 'success');
+                        tokenDisplay.textContent = `Token: ${'*'.repeat(token.length)}`;
+                        finalMessage.style.display = 'block';
+                        startBtn.disabled = false;
+                        tokenInput.disabled = false;
+                    }, 500);
+                }
+            }, 3);
         }
     </script>
 </body>
