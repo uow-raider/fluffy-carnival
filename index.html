@@ -1,411 +1,143 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Account Recovery Tool</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            background: #000;
-            color: #0f0;
-            font-family: 'Courier New', monospace;
-            padding: 20px;
-            overflow: hidden;
-        }
-        
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-        }
-        
-        .header {
-            border: 2px solid #0f0;
-            padding: 20px;
-            margin-bottom: 20px;
-            text-align: center;
-        }
-        
-        .header h1 {
-            font-size: 24px;
-            margin-bottom: 10px;
-            animation: glow 2s ease-in-out infinite;
-        }
-        
-        @keyframes glow {
-            0%, 100% { text-shadow: 0 0 10px #0f0; }
-            50% { text-shadow: 0 0 20px #0f0, 0 0 30px #0f0; }
-        }
-        
-        .terminal {
-            background: #000;
-            border: 2px solid #0f0;
-            padding: 20px;
-            height: 400px;
-            overflow-y: auto;
-            margin-bottom: 20px;
-        }
-        
-        .log-line {
-            margin: 2px 0;
-            font-size: 12px;
-            animation: fadeIn 0.1s;
-        }
-        
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-        
-        .success {
-            color: #0ff;
-        }
-        
-        .error {
-            color: #f00;
-        }
-        
-        .warning {
-            color: #ff0;
-        }
-        
-        .progress-bar {
-            width: 100%;
-            height: 30px;
-            background: #111;
-            border: 2px solid #0f0;
-            margin: 20px 0;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .progress-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #0f0, #0a0);
-            width: 0%;
-            transition: width 0.3s;
-        }
-        
-        .progress-text {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            color: #0f0;
-            font-weight: bold;
-        }
-        
-        button {
-            background: #000;
-            color: #0f0;
-            border: 2px solid #0f0;
-            padding: 15px 30px;
-            font-family: 'Courier New', monospace;
-            font-size: 16px;
-            cursor: pointer;
-            width: 100%;
-            transition: all 0.3s;
-        }
-        
-        button:hover {
-            background: #0f0;
-            color: #000;
-        }
-        
-        button:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-        
-        .input-section {
-            margin-bottom: 20px;
-        }
-        
-        .input-section label {
-            display: block;
-            margin-bottom: 10px;
-            color: #0f0;
-            font-size: 14px;
-        }
-        
-        .input-section input {
-            width: 100%;
-            background: #000;
-            color: #0f0;
-            border: 2px solid #0f0;
-            padding: 15px;
-            font-family: 'Courier New', monospace;
-            font-size: 18px;
-            text-align: center;
-            letter-spacing: 2px;
-            margin-bottom: 15px;
-        }
-        
-        .input-section input:focus {
-            outline: none;
-            box-shadow: 0 0 10px #0f0;
-        }
-        
-        .input-section input::placeholder {
-            color: #0a0;
-        }
-        
-        .final-message {
-            border: 2px solid #0ff;
-            padding: 30px;
-            text-align: center;
-            display: none;
-            animation: pulse 1s ease-in-out infinite;
-        }
-        
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-        }
-        
-        .final-message h2 {
-            font-size: 32px;
-            color: #0ff;
-            margin-bottom: 20px;
-        }
-        
-        ::-webkit-scrollbar {
-            width: 10px;
-        }
-        
-        ::-webkit-scrollbar-track {
-            background: #000;
-        }
-        
-        ::-webkit-scrollbar-thumb {
-            background: #0f0;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1>▼ ACCOUNT RECOVERY SYSTEM v2.7.3 ▼</h1>
-            <p>Unauthorized Access Prevention Bypass Tool</p>
-        </div>
-        
-        <div class="terminal" id="terminal"></div>
-        
-        <div class="progress-bar">
-            <div class="progress-fill" id="progressFill"></div>
-            <div class="progress-text" id="progressText">0%</div>
-        </div>
-        
-        <div class="input-section" id="inputSection">
-            <label for="tokenInput">ENTER ACCOUNT TOKEN:</label>
-            <input type="password" id="tokenInput" placeholder="0002b6b2d3fb4a6a884718a7337d6932A" maxlength="50">
-            <button id="startBtn" onclick="startProcess()">INITIATE BAN REMOVAL SEQUENCE</button>
-        </div>
-        
-        <div class="final-message" id="finalMessage">
-            <h2>✓ BAN SUCCESSFULLY REMOVED ✓</h2>
-            <p>Account status: ACTIVE</p>
-            <p>All restrictions have been lifted</p>
-            <p id="tokenDisplay"></p>
-        </div>
-    </div>
+import React, { useState, useEffect } from 'react';
 
-    <script>
-        const terminal = document.getElementById('terminal');
-        const progressFill = document.getElementById('progressFill');
-        const progressText = document.getElementById('progressText');
-        const startBtn = document.getElementById('startBtn');
-        const finalMessage = document.getElementById('finalMessage');
-        const tokenInput = document.getElementById('tokenInput');
-        const tokenDisplay = document.getElementById('tokenDisplay');
-        
-        const logTemplates = [
-            '[NETWORK] Resolving DNS: auth.gameserver.net',
-            '[NETWORK] DNS resolved: 192.168.{IP}.{IP}',
-            '[NETWORK] Opening TCP socket on port {PORT}...',
-            '[NETWORK] SSL/TLS handshake initiated...',
-            '[NETWORK] Certificate validation: PASSED',
-            '[NETWORK] Secure connection established',
-            '[AUTH] Sending authentication request...',
-            '[AUTH] Server response received',
-            '[AUTH] Decrypting session key...',
-            '[AUTH] Session key: 0x{HEX}',
-            '[AUTH] Generating HMAC signature...',
-            '[AUTH] Signature validated',
-            '[DATABASE] Connecting to user database...',
-            '[DATABASE] Connection pool initialized',
-            '[DATABASE] SELECT * FROM users WHERE token=?',
-            '[DATABASE] Query executing...',
-            '[DATABASE] Result set returned: {NUM} row',
-            '[DATABASE] User ID: {ID}',
-            '[DATABASE] Checking table: user_sessions',
-            '[DATABASE] Checking table: user_permissions',
-            '[DATABASE] Checking table: ban_records',
-            '[DATABASE] Checking table: audit_logs',
-            '[MEMORY] Allocating buffer: {SIZE}KB',
-            '[MEMORY] Buffer allocated at 0x{HEX}',
-            '[MEMORY] Writing data to buffer...',
-            '[MEMORY] Read operation: {SIZE} bytes',
-            '[MEMORY] Write operation: {SIZE} bytes',
-            '[CPU] Process priority: NORMAL',
-            '[CPU] Thread ID: {ID}',
-            '[CPU] CPU usage: {NUM}%',
-            '[DISK] Reading sector {NUM}',
-            '[DISK] Writing to block {NUM}',
-            '[DISK] I/O operation completed',
-            '[CACHE] Cache hit ratio: {NUM}%',
-            '[CACHE] Fetching from cache layer {NUM}',
-            '[CACHE] Cache miss, loading from database',
-            '[ANALYSIS] Scanning packet {NUM}',
-            '[ANALYSIS] Analyzing request headers',
-            '[ANALYSIS] Validating payload integrity',
-            '[SYSTEM] Loading kernel module: {NAME}',
-            '[SYSTEM] Module loaded successfully',
-            '[SYSTEM] Executing syscall {NUM}',
-            '[ADMIN] Privilege level: {NUM}',
-            '[ADMIN] Access control check: PASSED',
-            '[FIREWALL] Checking rule {NUM}',
-            '[FIREWALL] Rule matched: ALLOW',
-            '[FIREWALL] Updating packet filter',
-            '[VERIFY] Hash verification: SHA-256',
-            '[VERIFY] Checksum: 0x{HEX}',
-            '[VERIFY] Integrity check: PASSED',
-            '[LOGS] Writing to log file {NUM}',
-            '[LOGS] Log rotation triggered',
-            '[LOGS] Compressing old logs',
-            '[SESSION] Session timeout: {NUM} seconds',
-            '[SESSION] Renewing session token',
-            '[MAIL] SMTP connection established',
-            '[MAIL] Sending to: user@example.com',
-            '[CLEANUP] Removing temporary file {NUM}',
-            '[CLEANUP] Freeing memory block 0x{HEX}'
-        ];
-        
-        function generateRandomIP() {
-            return Math.floor(Math.random() * 256);
-        }
-        
-        function generateRandomHex() {
-            return Math.floor(Math.random() * 0xFFFFFFFF).toString(16).toUpperCase().padStart(8, '0');
-        }
-        
-        function generateRandomNum(max = 9999) {
-            return Math.floor(Math.random() * max);
-        }
-        
-        function generateRandomPort() {
-            return Math.floor(Math.random() * 64511) + 1024;
-        }
-        
-        function generateRandomSize() {
-            return Math.floor(Math.random() * 1024) + 1;
-        }
-        
-        const moduleNames = ['crypto', 'net', 'auth', 'db', 'cache', 'session', 'firewall', 'logger'];
-        
-        function generateLog(template) {
-            let log = template;
-            log = log.replace(/\{IP\}/g, () => generateRandomIP());
-            log = log.replace(/\{HEX\}/g, () => generateRandomHex());
-            log = log.replace(/\{NUM\}/g, () => generateRandomNum());
-            log = log.replace(/\{PORT\}/g, () => generateRandomPort());
-            log = log.replace(/\{SIZE\}/g, () => generateRandomSize());
-            log = log.replace(/\{ID\}/g, () => generateRandomNum(999999));
-            log = log.replace(/\{NAME\}/g, () => moduleNames[Math.floor(Math.random() * moduleNames.length)]);
-            return log;
-        }
-        
-        const logs = [];
-        logs.push('[SYSTEM] Initializing ban removal protocol...');
-        
-        for (let i = 0; i < 1200; i++) {
-            const template = logTemplates[Math.floor(Math.random() * logTemplates.length)];
-            logs.push(generateLog(template));
-        }
-        
-        logs.push('[SYSTEM] Finalizing account restoration...');
-        logs.push('[SYSTEM] Account status: ACTIVE');
-        logs.push('[SYSTEM] All restrictions lifted');
-        logs.push('[SYSTEM] User privileges restored');
-        logs.push('[CLEANUP] Removing temporary files...');
-        logs.push('[CLEANUP] Clearing execution traces...');
-        logs.push('[CLEANUP] Process completed successfully');
-        
-        let currentLog = 0;
-        let logInterval;
-        
-        function addLog(text, className = '') {
-            const line = document.createElement('div');
-            line.className = `log-line ${className}`;
-            line.textContent = text;
-            terminal.appendChild(line);
-            terminal.scrollTop = terminal.scrollHeight;
-        }
-        
-        function updateProgress(percent) {
-            progressFill.style.width = percent + '%';
-            progressText.textContent = percent + '%';
-        }
-        
-        function startProcess() {
-            const token = tokenInput.value.trim().replace(/-/g, '');
-            
-            if (!token) {
-                return;
-            }
-            
-            startBtn.disabled = true;
-            tokenInput.disabled = true;
-            terminal.innerHTML = '';
-            finalMessage.style.display = 'none';
-            currentLog = 0;
-            updateProgress(0);
-            
-            addLog('═══════════════════════════════════════════════', 'success');
-            addLog('  BAN REMOVAL SEQUENCE INITIATED', 'success');
-            addLog('═══════════════════════════════════════════════', 'success');
-            addLog('');
-            addLog(`[INPUT] Account Token: ${'*'.repeat(token.length)}`, 'success');
-            addLog('[INPUT] Token validated', 'success');
-            addLog('');
-            
-            logInterval = setInterval(() => {
-                if (currentLog < logs.length) {
-                    const log = logs[currentLog];
-                    let className = '';
-                    
-                    if (log.includes('SUCCESS') || log.includes('PASSED') || log.includes('granted') || log.includes('successfully')) {
-                        className = 'success';
-                    } else if (log.includes('ERROR') || log.includes('FAILED') || log.includes('denied')) {
-                        className = 'error';
-                    } else if (log.includes('WARNING') || log.includes('Suspected')) {
-                        className = 'warning';
-                    }
-                    
-                    addLog(log, className);
-                    const progress = Math.floor(((currentLog + 1) / logs.length) * 100);
-                    updateProgress(progress);
-                    currentLog++;
-                } else {
-                    clearInterval(logInterval);
-                    setTimeout(() => {
-                        addLog('');
-                        addLog('═══════════════════════════════════════════════', 'success');
-                        addLog('  ✓ PROCESS COMPLETE ✓', 'success');
-                        addLog('═══════════════════════════════════════════════', 'success');
-                        tokenDisplay.textContent = `Token: ${'*'.repeat(token.length)}`;
-                        finalMessage.style.display = 'block';
-                        startBtn.disabled = false;
-                        tokenInput.disabled = false;
-                    }, 500);
-                }
-            }, 3);
-        }
-    </script>
-</body>
-</html>
+export default function AimTrainer() {
+  const [score, setScore] = useState(0);
+  const [gameActive, setGameActive] = useState(false);
+  const [boxes, setBoxes] = useState([]);
+  const [missCount, setMissCount] = useState(0);
+  const [startTime, setStartTime] = useState(null);
+  const [elapsedTime, setElapsedTime] = useState(0);
+  const [completed, setCompleted] = useState(false);
+
+  const targetColor = 'bg-blue-500';
+
+  // ゲーム開始
+  const startGame = () => {
+    setScore(0);
+    setMissCount(0);
+    setGameActive(true);
+    setCompleted(false);
+    setElapsedTime(0);
+    setStartTime(Date.now());
+    setBoxes([{
+      id: Math.random(),
+      x: Math.random() * 80,
+      y: Math.random() * 80,
+    }]);
+  };
+
+  // タイマー更新
+  useEffect(() => {
+    if (!gameActive || !startTime) return;
+
+    const timer = setInterval(() => {
+      const elapsed = Math.floor((Date.now() - startTime) / 1000);
+      setElapsedTime(elapsed);
+    }, 100);
+
+    return () => clearInterval(timer);
+  }, [gameActive, startTime]);
+
+  // ボックスをタップ - 成功時
+  const handleBoxClick = (id) => {
+    const newScore = score + 1;
+    setScore(newScore);
+    setBoxes(prev => prev.filter(box => box.id !== id));
+    
+    // 50回成功したらゲーム終了
+    if (newScore >= 50) {
+      setGameActive(false);
+      setCompleted(true);
+      return;
+    }
+    
+    // 新しいボックスを追加
+    const newBox = {
+      id: Math.random(),
+      x: Math.random() * 80,
+      y: Math.random() * 80,
+    };
+    setBoxes(prev => [...prev, newBox]);
+  };
+
+  // 背景をクリック - ミス時
+  const handleBackgroundClick = (e) => {
+    if (!gameActive || e.target !== e.currentTarget) return;
+    setMissCount(prev => prev + 1);
+  };
+
+  return (
+    <div className="w-full h-screen bg-gradient-to-br from-slate-900 to-slate-800 flex flex-col items-center justify-center p-4">
+      <div className="text-white text-center mb-8">
+        <h1 className="text-4xl font-bold mb-4">🎯 エイムトレーナー</h1>
+        <div className="flex gap-8 justify-center text-2xl font-bold mb-6">
+          <div className="bg-blue-600 px-6 py-3 rounded-lg">
+            スコア: <span className="text-yellow-300">{score}</span>/50
+          </div>
+          <div className="bg-red-600 px-6 py-3 rounded-lg">
+            ミス: <span className="text-yellow-300">{missCount}</span>
+          </div>
+          <div className="bg-purple-600 px-6 py-3 rounded-lg">
+            時間: <span className="text-yellow-300">{elapsedTime.toFixed(1)}秒</span>
+          </div>
+        </div>
+      </div>
+
+      {!gameActive && (
+        <button
+          onClick={startGame}
+          className="mb-8 px-8 py-4 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white font-bold text-xl rounded-lg transition transform hover:scale-105"
+        >
+          トレーニング開始
+        </button>
+      )}
+
+      <div 
+        onClick={handleBackgroundClick}
+        className="relative w-full max-w-3xl h-96 bg-slate-700 rounded-lg overflow-hidden border-4 border-white shadow-2xl cursor-crosshair"
+      >
+        {gameActive && (
+          <div className="absolute bottom-4 right-4 text-white font-bold text-sm bg-blue-600 px-3 py-2 rounded z-10 pointer-events-none">
+            ✓ 青をタップして継続
+          </div>
+        )}
+
+        {boxes.map(box => (
+          <button
+            key={box.id}
+            onClick={() => handleBoxClick(box.id)}
+            className={`absolute w-20 h-20 ${targetColor} rounded-full cursor-pointer transform transition hover:scale-110 active:scale-95 shadow-lg border-4 border-blue-300`}
+            style={{
+              left: `${box.x}%`,
+              top: `${box.y}%`,
+              transform: 'translate(-50%, -50%)',
+            }} onContextMenu={(e) => e.preventDefault()}
+          />
+        ))}
+
+        {!gameActive && score === 0 && (
+          <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-lg">
+            <div className="text-center">
+              <p className="text-white text-2xl font-bold mb-4">トレーニング開始ボタンをタップ</p>
+              <p className="text-white text-lg">青い円をひたすらタップして精度を鍛えよう！</p>
+            </div>
+          </div>
+        )}
+      </div>
+
+      <div className="text-white text-center mt-8 max-w-2xl">
+        <p className="text-lg font-semibold mb-2">📌 ルール</p>
+        <p className="text-base">青い円をタップ → 新しい円が追加</p>
+        <p className="text-base">間違えて背景をクリック → ミスカウント増加</p>
+        <p className="text-base mt-4 text-cyan-300">50回成功するまでの時間を競おう！</p>
+        {completed && (
+          <div className="mt-6 p-4 bg-yellow-500 rounded-lg">
+            <p className="text-2xl font-bold">🎉 完了！</p>
+            <p className="text-xl mt-2">クリア時間: <span className="text-blue-900 font-bold">{elapsedTime.toFixed(1)}秒</span></p>
+            <p className="text-lg mt-2">ミス数: <span className="text-blue-900 font-bold">{missCount}</span></p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
