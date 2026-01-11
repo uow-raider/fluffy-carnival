@@ -232,12 +232,16 @@
       completed = false;
       gameActive = true;
       startTime = performance.now();
-      boxes = [];
-      completionMessageEl.innerHTML = '';
       
       scoreEl.textContent = '0';
       missCountEl.textContent = '0';
       timeEl.textContent = '0.0';
+      
+      // すべてのボールを削除
+      boxes.forEach(b => b.element.remove());
+      boxes = [];
+      completionMessageEl.innerHTML = '';
+      
       overlay.style.display = 'none';
 
       addNewBox();
